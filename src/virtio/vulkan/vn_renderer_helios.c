@@ -122,6 +122,7 @@ struct helios_unicode_string {
 #define HELIOS_ESCAPE_QUERY_SCANOUT           0x000Du
 #define HELIOS_ESCAPE_PRESENT_STREAM           0x0010u
 #define HELIOS_ESCAPE_PRESENT_BUFFER_READ      0x0012u
+#define HELIOS_ESCAPE_QUERY_VENUS_CAPSET       0x0016u
 
 #define HELIOS_PRESENT_STREAM_OP_REGISTER   1u
 #define HELIOS_PRESENT_STREAM_OP_UNREGISTER 2u
@@ -168,6 +169,23 @@ struct helios_escape_header {
    uint32_t cmd_type; /* one of HELIOS_ESCAPE_* */
    uint32_t version;  /* == HELIOS_ESCAPE_VERSION */
    uint32_t size;     /* total escape buffer size in bytes */
+};
+
+struct helios_venus_capset {
+   uint32_t wire_format_version;
+   uint32_t vk_xml_version;
+   uint32_t vk_ext_command_serialization_spec_version;
+   uint32_t vk_mesa_venus_protocol_spec_version;
+   uint32_t supports_blob_id_0;
+   uint32_t vk_extension_mask1[32];
+   uint32_t allow_vk_wait_syncs;
+   uint32_t supports_multiple_timelines;
+   uint32_t use_guest_vram;
+};
+
+struct helios_escape_query_venus_capset {
+   struct helios_escape_header hdr;
+   struct helios_venus_capset out_capset;
 };
 
 struct helios_escape_ctx_create {
@@ -341,6 +359,17 @@ struct helios_venus_scanout_info {
 
 /* Wire-size guards mirroring protocol/src/escape.rs const _: () asserts. */
 _Static_assert(sizeof(struct helios_escape_header) == 16, "hdr size");
+_Static_assert(sizeof(struct helios_venus_capset) == 160, "venus capset size");
+_Static_assert(offsetof(struct helios_venus_capset, vk_extension_mask1) == 20,
+               "venus extension mask offset");
+_Static_assert(offsetof(struct helios_venus_capset, allow_vk_wait_syncs) == 148,
+               "venus wait-sync flag offset");
+_Static_assert(offsetof(struct helios_venus_capset, use_guest_vram) == 156,
+               "venus guest-vram flag offset");
+_Static_assert(sizeof(struct helios_escape_query_venus_capset) == 176,
+               "query venus capset size");
+_Static_assert(offsetof(struct helios_escape_query_venus_capset, out_capset) == 16,
+               "query venus capset payload offset");
 _Static_assert(sizeof(struct helios_escape_ctx_create) == 24, "ctx_create size");
 _Static_assert(sizeof(struct helios_escape_ctx_destroy) == 24, "ctx_destroy size");
 _Static_assert(sizeof(struct helios_escape_submit_venus) == 40, "submit size");
@@ -1504,6 +1533,20 @@ static bool
 helios_escape(struct helios *helios, void *buf, uint32_t size)
 {
    return helios_escape_ex(helios, buf, size, helios_escape_hw_forced());
+}
+
+static bool
+helios_ioctl_query_venus_capset(struct helios *helios,
+                                struct helios_venus_capset *out_capset)
+{
+   struct helios_escape_query_venus_capset req = { 0 };
+   helios_hdr_init(&req.hdr, HELIOS_ESCAPE_QUERY_VENUS_CAPSET, sizeof(req));
+   if (!helios_escape(helios, &req, sizeof(req))) {
+      helios_diag("QUERY_VENUS_CAPSET escape failed");
+      return false;
+   }
+   *out_capset = req.out_capset;
+   return true;
 }
 
 /* REGISTER/UNREGISTER are intentionally synchronous control-plane escapes.
@@ -4888,24 +4931,35 @@ vn_renderer_helios_sync_export_win32(
 
 /* ── init / teardown ───────────────────────────────────────────────────────── */
 
-static void
-helios_init_renderer_info(struct helios *helios)
+static bool
+helios_init_renderer_info(struct helios *helios,
+                          const struct helios_venus_capset *capset)
 {
    struct vn_renderer_info *info = &helios->base.info;
-
-   /* Helios has no GET_CAPSET IOCTL, so these are hardcoded (PHASE5_HANDOVER §5);
-    * the host already negotiated the venus capset at CTX_CREATE, and the layers
-    * above clamp over-reported versions down. The hard gate is wire_format_version
-    * == vn_info_wire_format_version() (==1); vk_xml_version must be >= 1.1 and is
-    * clamped to vn_info_vk_xml_version(). */
-   info->wire_format_version = 1;
-   info->vk_xml_version = VK_MAKE_API_VERSION(0, 1, 4, 343);
-   info->vk_ext_command_serialization_spec_version = 1;
-   info->vk_mesa_venus_protocol_spec_version = 4;
-
-   /* mask1[0] bit0 clear => "all extensions supported by the renderer protocol"
-    * (venus_hw.h:44, vn_cs.c:21). All-zero = maximally permissive. */
-   memset(info->vk_extension_mask, 0, sizeof(info->vk_extension_mask));
+   if (!capset || capset->wire_format_version != vn_info_wire_format_version() ||
+       !capset->vk_xml_version ||
+       !capset->vk_ext_command_serialization_spec_version ||
+       !capset->vk_mesa_venus_protocol_spec_version ||
+       !capset->supports_blob_id_0 || !capset->allow_vk_wait_syncs ||
+       !capset->supports_multiple_timelines) {
+      helios_diag("invalid/incompatible Venus capset wire=%u xml=0x%x cmd=%u protocol=%u blob0=%u wait_syncs=%u multi_timeline=%u",
+                  capset ? capset->wire_format_version : 0,
+                  capset ? capset->vk_xml_version : 0,
+                  capset ? capset->vk_ext_command_serialization_spec_version : 0,
+                  capset ? capset->vk_mesa_venus_protocol_spec_version : 0,
+                  capset ? capset->supports_blob_id_0 : 0,
+                  capset ? capset->allow_vk_wait_syncs : 0,
+                  capset ? capset->supports_multiple_timelines : 0);
+      return false;
+   }
+   info->wire_format_version = capset->wire_format_version;
+   info->vk_xml_version = capset->vk_xml_version;
+   info->vk_ext_command_serialization_spec_version =
+      capset->vk_ext_command_serialization_spec_version;
+   info->vk_mesa_venus_protocol_spec_version =
+      capset->vk_mesa_venus_protocol_spec_version;
+   memcpy(info->vk_extension_mask, capset->vk_extension_mask1,
+          sizeof(info->vk_extension_mask));
 
    /* Per-queue host timelines. venus binds each VkQueue to a distinct ring_idx
     * (1..max-1; ring_idx 0 is the reserved CPU timeline) via
@@ -4968,6 +5022,7 @@ helios_init_renderer_info(struct helios *helios)
       info->id.has_luid = false;
       helios_diag("renderer info: WDDM adapter LUID is zero; deviceLUIDValid=false");
    }
+   return true;
 }
 
 static void
@@ -5164,7 +5219,12 @@ helios_init(struct helios *helios)
    vn_renderer_shmem_cache_init(&helios->shmem_cache, &helios->base,
                                 helios_shmem_destroy_now);
 
-   helios_init_renderer_info(helios);
+   struct helios_venus_capset capset;
+   if (!helios_ioctl_query_venus_capset(helios, &capset) ||
+       !helios_init_renderer_info(helios, &capset)) {
+      helios_diag("renderer initialization refused: Venus capset unavailable or incompatible");
+      return VK_ERROR_INITIALIZATION_FAILED;
+   }
 
    helios->base.ops.destroy = helios_destroy;
    helios->base.ops.submit = helios_submit;
