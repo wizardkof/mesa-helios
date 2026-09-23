@@ -265,4 +265,12 @@ vn_info_extension_mask_test(const uint32_t *mask, uint32_t ext_number)
    return mask[ext_number / 32] & (1 << (ext_number % 32));
 }
 
+static inline bool
+vn_info_extension_mask_supports(const uint32_t *mask, uint32_t ext_number)
+{
+   /* A clear marker bit identifies legacy peers that support all extensions. */
+   return !vn_info_extension_mask_test(mask, 0) ||
+          vn_info_extension_mask_test(mask, ext_number);
+}
+
 #endif /* VN_PROTOCOL_DRIVER_INFO_H */
