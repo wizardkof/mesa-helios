@@ -119,7 +119,7 @@ static inline size_t vn_sizeof_vkCreatePipelineCache_reply(VkDevice device, cons
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkCreatePipelineCache_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip pCreateInfo */
@@ -243,7 +243,7 @@ static inline size_t vn_sizeof_vkGetPipelineCacheData_reply(VkDevice device, VkP
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetPipelineCacheData_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip pipelineCache */
@@ -333,7 +333,7 @@ static inline size_t vn_sizeof_vkMergePipelineCaches_reply(VkDevice device, VkPi
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkMergePipelineCaches_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip dstCache */

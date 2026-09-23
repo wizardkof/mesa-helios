@@ -41918,7 +41918,7 @@ static inline size_t vn_sizeof_vkEnumeratePhysicalDevices_reply(VkInstance insta
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkEnumeratePhysicalDevices_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip instance */
     cmd_size += vn_sizeof_simple_pointer(pPhysicalDeviceCount);
@@ -42318,7 +42318,7 @@ static inline size_t vn_sizeof_vkGetPhysicalDeviceImageFormatProperties_reply(Vk
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetPhysicalDeviceImageFormatProperties_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip physicalDevice */
     /* skip format */
@@ -42400,7 +42400,7 @@ static inline size_t vn_sizeof_vkCreateDevice_reply(VkPhysicalDevice physicalDev
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkCreateDevice_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip physicalDevice */
     /* skip pCreateInfo */
@@ -42530,7 +42530,7 @@ static inline size_t vn_sizeof_vkEnumerateDeviceLayerProperties_reply(VkPhysical
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkEnumerateDeviceLayerProperties_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip physicalDevice */
     cmd_size += vn_sizeof_simple_pointer(pPropertyCount);
@@ -42635,7 +42635,7 @@ static inline size_t vn_sizeof_vkEnumerateDeviceExtensionProperties_reply(VkPhys
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkEnumerateDeviceExtensionProperties_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip physicalDevice */
     /* skip pLayerName */
@@ -42773,7 +42773,7 @@ static inline size_t vn_sizeof_vkDeviceWaitIdle_reply(VkDevice device)
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkDeviceWaitIdle_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
 
@@ -43109,7 +43109,7 @@ static inline size_t vn_sizeof_vkGetPhysicalDeviceImageFormatProperties2_reply(V
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetPhysicalDeviceImageFormatProperties2_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip physicalDevice */
     /* skip pImageFormatInfo */
@@ -43609,7 +43609,7 @@ static inline size_t vn_sizeof_vkEnumeratePhysicalDeviceGroups_reply(VkInstance 
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkEnumeratePhysicalDeviceGroups_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip instance */
     cmd_size += vn_sizeof_simple_pointer(pPhysicalDeviceGroupCount);
@@ -43876,7 +43876,7 @@ static inline size_t vn_sizeof_vkGetPhysicalDeviceCalibrateableTimeDomainsKHR_re
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetPhysicalDeviceCalibrateableTimeDomainsKHR_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip physicalDevice */
     cmd_size += vn_sizeof_simple_pointer(pTimeDomainCount);
@@ -43966,7 +43966,7 @@ static inline size_t vn_sizeof_vkGetCalibratedTimestampsKHR_reply(VkDevice devic
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetCalibratedTimestampsKHR_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip timestampCount */
@@ -44059,7 +44059,7 @@ static inline size_t vn_sizeof_vkGetPhysicalDeviceToolProperties_reply(VkPhysica
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetPhysicalDeviceToolProperties_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip physicalDevice */
     cmd_size += vn_sizeof_simple_pointer(pToolCount);
@@ -44150,7 +44150,7 @@ static inline size_t vn_sizeof_vkGetPhysicalDeviceFragmentShadingRatesKHR_reply(
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetPhysicalDeviceFragmentShadingRatesKHR_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip physicalDevice */
     cmd_size += vn_sizeof_simple_pointer(pFragmentShadingRateCount);
@@ -44241,7 +44241,7 @@ static inline size_t vn_sizeof_vkGetPhysicalDeviceCooperativeMatrixPropertiesKHR
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetPhysicalDeviceCooperativeMatrixPropertiesKHR_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip physicalDevice */
     cmd_size += vn_sizeof_simple_pointer(pPropertyCount);
@@ -44315,7 +44315,7 @@ static inline size_t vn_sizeof_vkGetPhysicalDeviceDescriptorSizeEXT_reply(VkPhys
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetPhysicalDeviceDescriptorSizeEXT_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkDeviceSize ret;
+    VkDeviceSize ret = {0};
     cmd_size += vn_sizeof_VkDeviceSize(&ret);
     /* skip physicalDevice */
     /* skip descriptorType */

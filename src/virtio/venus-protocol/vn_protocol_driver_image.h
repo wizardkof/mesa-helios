@@ -1792,7 +1792,7 @@ static inline size_t vn_sizeof_vkBindImageMemory_reply(VkDevice device, VkImage 
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkBindImageMemory_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip image */
@@ -1951,7 +1951,7 @@ static inline size_t vn_sizeof_vkCreateImage_reply(VkDevice device, const VkImag
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkCreateImage_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip pCreateInfo */
@@ -2149,7 +2149,7 @@ static inline size_t vn_sizeof_vkBindImageMemory2_reply(VkDevice device, uint32_
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkBindImageMemory2_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip bindInfoCount */
@@ -2519,7 +2519,7 @@ static inline size_t vn_sizeof_vkGetImageDrmFormatModifierPropertiesEXT_reply(Vk
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetImageDrmFormatModifierPropertiesEXT_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip image */

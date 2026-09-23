@@ -462,7 +462,7 @@ static inline size_t vn_sizeof_vkRegisterCustomBorderColorEXT_reply(VkDevice dev
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkRegisterCustomBorderColorEXT_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip pBorderColor */
@@ -600,7 +600,7 @@ static inline size_t vn_sizeof_vkGetImageOpaqueCaptureDataEXT_reply(VkDevice dev
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetImageOpaqueCaptureDataEXT_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip imageCount */
@@ -677,7 +677,7 @@ static inline size_t vn_sizeof_vkWriteSamplerDescriptorMESA_reply(VkDevice devic
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkWriteSamplerDescriptorMESA_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip pSampler */
@@ -752,7 +752,7 @@ static inline size_t vn_sizeof_vkWriteResourceDescriptorMESA_reply(VkDevice devi
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkWriteResourceDescriptorMESA_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip pResource */

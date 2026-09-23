@@ -52,7 +52,7 @@ static inline size_t vn_sizeof_vkCreateImageView_reply(VkDevice device, const Vk
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkCreateImageView_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip pCreateInfo */

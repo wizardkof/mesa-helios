@@ -3834,7 +3834,7 @@ static inline size_t vn_sizeof_vkCreateGraphicsPipelines_reply(VkDevice device, 
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkCreateGraphicsPipelines_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip pipelineCache */
@@ -3943,7 +3943,7 @@ static inline size_t vn_sizeof_vkCreateComputePipelines_reply(VkDevice device, V
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkCreateComputePipelines_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip pipelineCache */
@@ -4079,7 +4079,7 @@ static inline size_t vn_sizeof_vkGetRayTracingShaderGroupHandlesKHR_reply(VkDevi
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetRayTracingShaderGroupHandlesKHR_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip pipeline */
@@ -4159,7 +4159,7 @@ static inline size_t vn_sizeof_vkGetRayTracingCaptureReplayShaderGroupHandlesKHR
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetRayTracingCaptureReplayShaderGroupHandlesKHR_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip pipeline */
@@ -4268,7 +4268,7 @@ static inline size_t vn_sizeof_vkCreateRayTracingPipelinesKHR_reply(VkDevice dev
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkCreateRayTracingPipelinesKHR_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip deferredOperation */
@@ -4348,7 +4348,7 @@ static inline size_t vn_sizeof_vkGetRayTracingShaderGroupStackSizeKHR_reply(VkDe
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetRayTracingShaderGroupStackSizeKHR_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkDeviceSize ret;
+    VkDeviceSize ret = {0};
     cmd_size += vn_sizeof_VkDeviceSize(&ret);
     /* skip device */
     /* skip pipeline */

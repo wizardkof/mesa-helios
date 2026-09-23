@@ -936,7 +936,7 @@ static inline size_t vn_sizeof_vkAllocateMemory_reply(VkDevice device, const VkM
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkAllocateMemory_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip pAllocateInfo */
@@ -1114,7 +1114,7 @@ static inline size_t vn_sizeof_vkFlushMappedMemoryRanges_reply(VkDevice device, 
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkFlushMappedMemoryRanges_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip memoryRangeCount */
@@ -1183,7 +1183,7 @@ static inline size_t vn_sizeof_vkInvalidateMappedMemoryRanges_reply(VkDevice dev
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkInvalidateMappedMemoryRanges_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip memoryRangeCount */
@@ -1298,7 +1298,7 @@ static inline size_t vn_sizeof_vkGetDeviceMemoryOpaqueCaptureAddress_reply(VkDev
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetDeviceMemoryOpaqueCaptureAddress_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    uint64_t ret;
+    uint64_t ret = {0};
     cmd_size += vn_sizeof_uint64_t(&ret);
     /* skip device */
     /* skip pInfo */
@@ -1354,7 +1354,7 @@ static inline size_t vn_sizeof_vkUnmapMemory2_reply(VkDevice device, const VkMem
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkUnmapMemory2_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip pMemoryUnmapInfo */
@@ -1412,7 +1412,7 @@ static inline size_t vn_sizeof_vkGetMemoryResourcePropertiesMESA_reply(VkDevice 
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetMemoryResourcePropertiesMESA_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip resourceId */

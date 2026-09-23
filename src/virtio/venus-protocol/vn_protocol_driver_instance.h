@@ -243,7 +243,7 @@ static inline size_t vn_sizeof_vkCreateInstance_reply(const VkInstanceCreateInfo
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkCreateInstance_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip pCreateInfo */
     /* skip pAllocator */
@@ -352,7 +352,7 @@ static inline size_t vn_sizeof_vkEnumerateInstanceVersion_reply(uint32_t* pApiVe
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkEnumerateInstanceVersion_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     cmd_size += vn_sizeof_simple_pointer(pApiVersion);
     if (pApiVersion)
@@ -424,7 +424,7 @@ static inline size_t vn_sizeof_vkEnumerateInstanceLayerProperties_reply(uint32_t
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkEnumerateInstanceLayerProperties_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     cmd_size += vn_sizeof_simple_pointer(pPropertyCount);
     if (pPropertyCount)
@@ -525,7 +525,7 @@ static inline size_t vn_sizeof_vkEnumerateInstanceExtensionProperties_reply(cons
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkEnumerateInstanceExtensionProperties_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip pLayerName */
     cmd_size += vn_sizeof_simple_pointer(pPropertyCount);

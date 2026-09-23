@@ -311,7 +311,7 @@ static inline size_t vn_sizeof_vkCreateDeferredOperationKHR_reply(VkDevice devic
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkCreateDeferredOperationKHR_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip pAllocator */
@@ -426,7 +426,7 @@ static inline size_t vn_sizeof_vkGetDeferredOperationMaxConcurrencyKHR_reply(VkD
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetDeferredOperationMaxConcurrencyKHR_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    uint32_t ret;
+    uint32_t ret = {0};
     cmd_size += vn_sizeof_uint32_t(&ret);
     /* skip device */
     /* skip operation */
@@ -479,7 +479,7 @@ static inline size_t vn_sizeof_vkGetDeferredOperationResultKHR_reply(VkDevice de
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetDeferredOperationResultKHR_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip operation */
@@ -532,7 +532,7 @@ static inline size_t vn_sizeof_vkDeferredOperationJoinKHR_reply(VkDevice device,
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkDeferredOperationJoinKHR_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip operation */

@@ -745,7 +745,7 @@ static inline size_t vn_sizeof_vkBindBufferMemory_reply(VkDevice device, VkBuffe
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkBindBufferMemory_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip buffer */
@@ -815,7 +815,7 @@ static inline size_t vn_sizeof_vkCreateBuffer_reply(VkDevice device, const VkBuf
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkCreateBuffer_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip pCreateInfo */
@@ -946,7 +946,7 @@ static inline size_t vn_sizeof_vkBindBufferMemory2_reply(VkDevice device, uint32
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkBindBufferMemory2_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip bindInfoCount */
@@ -1130,7 +1130,7 @@ static inline size_t vn_sizeof_vkGetBufferOpaqueCaptureAddress_reply(VkDevice de
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetBufferOpaqueCaptureAddress_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    uint64_t ret;
+    uint64_t ret = {0};
     cmd_size += vn_sizeof_uint64_t(&ret);
     /* skip device */
     /* skip pInfo */
@@ -1186,7 +1186,7 @@ static inline size_t vn_sizeof_vkGetBufferDeviceAddress_reply(VkDevice device, c
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetBufferDeviceAddress_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkDeviceAddress ret;
+    VkDeviceAddress ret = {0};
     cmd_size += vn_sizeof_VkDeviceAddress(&ret);
     /* skip device */
     /* skip pInfo */

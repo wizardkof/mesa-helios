@@ -294,7 +294,7 @@ static inline size_t vn_sizeof_vkAllocateDescriptorSets_reply(VkDevice device, c
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkAllocateDescriptorSets_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip pAllocateInfo */
@@ -378,7 +378,7 @@ static inline size_t vn_sizeof_vkFreeDescriptorSets_reply(VkDevice device, VkDes
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkFreeDescriptorSets_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip descriptorPool */

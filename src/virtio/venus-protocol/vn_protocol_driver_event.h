@@ -105,7 +105,7 @@ static inline size_t vn_sizeof_vkCreateEvent_reply(VkDevice device, const VkEven
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkCreateEvent_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip pCreateInfo */
@@ -222,7 +222,7 @@ static inline size_t vn_sizeof_vkGetEventStatus_reply(VkDevice device, VkEvent e
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetEventStatus_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip event */
@@ -275,7 +275,7 @@ static inline size_t vn_sizeof_vkSetEvent_reply(VkDevice device, VkEvent event)
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkSetEvent_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip event */
@@ -328,7 +328,7 @@ static inline size_t vn_sizeof_vkResetEvent_reply(VkDevice device, VkEvent event
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkResetEvent_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip event */

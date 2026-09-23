@@ -401,7 +401,7 @@ static inline size_t vn_sizeof_vkCreateSemaphore_reply(VkDevice device, const Vk
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkCreateSemaphore_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip pCreateInfo */
@@ -520,7 +520,7 @@ static inline size_t vn_sizeof_vkGetSemaphoreCounterValue_reply(VkDevice device,
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetSemaphoreCounterValue_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip semaphore */
@@ -586,7 +586,7 @@ static inline size_t vn_sizeof_vkWaitSemaphores_reply(VkDevice device, const VkS
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkWaitSemaphores_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip pWaitInfo */
@@ -644,7 +644,7 @@ static inline size_t vn_sizeof_vkSignalSemaphore_reply(VkDevice device, const Vk
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkSignalSemaphore_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip pSignalInfo */

@@ -198,7 +198,7 @@ static inline size_t vn_sizeof_vkCreateFence_reply(VkDevice device, const VkFenc
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkCreateFence_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip pCreateInfo */
@@ -329,7 +329,7 @@ static inline size_t vn_sizeof_vkResetFences_reply(VkDevice device, uint32_t fen
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkResetFences_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip fenceCount */
@@ -384,7 +384,7 @@ static inline size_t vn_sizeof_vkGetFenceStatus_reply(VkDevice device, VkFence f
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetFenceStatus_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip fence */
@@ -455,7 +455,7 @@ static inline size_t vn_sizeof_vkWaitForFences_reply(VkDevice device, uint32_t f
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkWaitForFences_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip fenceCount */

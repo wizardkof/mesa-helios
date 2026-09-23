@@ -400,7 +400,7 @@ static inline size_t vn_sizeof_vkCopyImageToImage_reply(VkDevice device, const V
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkCopyImageToImage_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip pCopyImageToImageInfo */
@@ -467,7 +467,7 @@ static inline size_t vn_sizeof_vkTransitionImageLayout_reply(VkDevice device, ui
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkTransitionImageLayout_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip transitionCount */
@@ -529,7 +529,7 @@ static inline size_t vn_sizeof_vkCopyImageToMemoryMESA_reply(VkDevice device, co
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkCopyImageToMemoryMESA_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip pCopyImageToMemoryInfo */
@@ -600,7 +600,7 @@ static inline size_t vn_sizeof_vkCopyMemoryToImageMESA_reply(VkDevice device, co
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkCopyMemoryToImageMESA_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip device */
     /* skip pCopyMemoryToImageInfo */

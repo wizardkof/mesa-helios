@@ -1042,7 +1042,7 @@ static inline size_t vn_sizeof_vkQueueSubmit_reply(VkQueue queue, uint32_t submi
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkQueueSubmit_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip queue */
     /* skip submitCount */
@@ -1097,7 +1097,7 @@ static inline size_t vn_sizeof_vkQueueWaitIdle_reply(VkQueue queue)
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkQueueWaitIdle_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip queue */
 
@@ -1164,7 +1164,7 @@ static inline size_t vn_sizeof_vkQueueBindSparse_reply(VkQueue queue, uint32_t b
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkQueueBindSparse_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip queue */
     /* skip bindInfoCount */
@@ -1237,7 +1237,7 @@ static inline size_t vn_sizeof_vkQueueSubmit2_reply(VkQueue queue, uint32_t subm
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkQueueSubmit2_EXT;
     size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
 
-    VkResult ret;
+    VkResult ret = {0};
     cmd_size += vn_sizeof_VkResult(&ret);
     /* skip queue */
     /* skip submitCount */
