@@ -944,7 +944,10 @@ static inline void vn_decode_vkGetGeneratedCommandsMemoryRequirementsEXT_reply(s
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetGeneratedCommandsMemoryRequirementsEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetGeneratedCommandsMemoryRequirementsEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip pInfo */
@@ -1012,7 +1015,10 @@ static inline VkResult vn_decode_vkCreateIndirectCommandsLayoutEXT_reply(struct 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCreateIndirectCommandsLayoutEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCreateIndirectCommandsLayoutEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -1072,7 +1078,10 @@ static inline void vn_decode_vkDestroyIndirectCommandsLayoutEXT_reply(struct vn_
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkDestroyIndirectCommandsLayoutEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkDestroyIndirectCommandsLayoutEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip indirectCommandsLayout */
@@ -1136,7 +1145,10 @@ static inline VkResult vn_decode_vkCreateIndirectExecutionSetEXT_reply(struct vn
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCreateIndirectExecutionSetEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCreateIndirectExecutionSetEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -1196,7 +1208,10 @@ static inline void vn_decode_vkDestroyIndirectExecutionSetEXT_reply(struct vn_cs
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkDestroyIndirectExecutionSetEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkDestroyIndirectExecutionSetEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip indirectExecutionSet */
@@ -1259,7 +1274,10 @@ static inline void vn_decode_vkUpdateIndirectExecutionSetPipelineEXT_reply(struc
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkUpdateIndirectExecutionSetPipelineEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkUpdateIndirectExecutionSetPipelineEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip indirectExecutionSet */
@@ -1323,7 +1341,10 @@ static inline void vn_decode_vkUpdateIndirectExecutionSetShaderEXT_reply(struct 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkUpdateIndirectExecutionSetShaderEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkUpdateIndirectExecutionSetShaderEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip indirectExecutionSet */

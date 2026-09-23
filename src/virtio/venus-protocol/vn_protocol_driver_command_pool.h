@@ -123,7 +123,10 @@ static inline VkResult vn_decode_vkCreateCommandPool_reply(struct vn_cs_decoder 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCreateCommandPool_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCreateCommandPool_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -183,7 +186,10 @@ static inline void vn_decode_vkDestroyCommandPool_reply(struct vn_cs_decoder *de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkDestroyCommandPool_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkDestroyCommandPool_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip commandPool */
@@ -233,7 +239,10 @@ static inline VkResult vn_decode_vkResetCommandPool_reply(struct vn_cs_decoder *
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkResetCommandPool_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkResetCommandPool_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -285,7 +294,10 @@ static inline void vn_decode_vkTrimCommandPool_reply(struct vn_cs_decoder *dec, 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkTrimCommandPool_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkTrimCommandPool_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip commandPool */

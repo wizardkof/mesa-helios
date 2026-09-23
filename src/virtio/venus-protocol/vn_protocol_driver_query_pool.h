@@ -127,7 +127,10 @@ static inline VkResult vn_decode_vkCreateQueryPool_reply(struct vn_cs_decoder *d
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCreateQueryPool_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCreateQueryPool_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -187,7 +190,10 @@ static inline void vn_decode_vkDestroyQueryPool_reply(struct vn_cs_decoder *dec,
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkDestroyQueryPool_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkDestroyQueryPool_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip queryPool */
@@ -257,7 +263,10 @@ static inline VkResult vn_decode_vkGetQueryPoolResults_reply(struct vn_cs_decode
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetQueryPoolResults_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetQueryPoolResults_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -323,7 +332,10 @@ static inline void vn_decode_vkResetQueryPool_reply(struct vn_cs_decoder *dec, V
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkResetQueryPool_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkResetQueryPool_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip queryPool */

@@ -1027,7 +1027,7 @@ vn_decode_VkSparseImageMemoryRequirements2_pnext(struct vn_cs_decoder *dec, cons
 {
     /* no known/supported struct */
     if (vn_decode_simple_pointer(dec))
-        assert(false);
+        vn_cs_decoder_set_fatal(dec);
 }
 
 static inline void
@@ -1042,9 +1042,15 @@ vn_decode_VkSparseImageMemoryRequirements2(struct vn_cs_decoder *dec, VkSparseIm
 {
     VkStructureType stype;
     vn_decode_VkStructureType(dec, &stype);
-    assert(stype == VK_STRUCTURE_TYPE_SPARSE_IMAGE_MEMORY_REQUIREMENTS_2);
+    if (stype != VK_STRUCTURE_TYPE_SPARSE_IMAGE_MEMORY_REQUIREMENTS_2) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
-    assert(val->sType == stype);
+    if (val->sType != stype) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
     vn_decode_VkSparseImageMemoryRequirements2_pnext(dec, val->pNext);
     vn_decode_VkSparseImageMemoryRequirements2_self(dec, val);
 }
@@ -1193,7 +1199,7 @@ vn_decode_VkImageDrmFormatModifierPropertiesEXT_pnext(struct vn_cs_decoder *dec,
 {
     /* no known/supported struct */
     if (vn_decode_simple_pointer(dec))
-        assert(false);
+        vn_cs_decoder_set_fatal(dec);
 }
 
 static inline void
@@ -1208,9 +1214,15 @@ vn_decode_VkImageDrmFormatModifierPropertiesEXT(struct vn_cs_decoder *dec, VkIma
 {
     VkStructureType stype;
     vn_decode_VkStructureType(dec, &stype);
-    assert(stype == VK_STRUCTURE_TYPE_IMAGE_DRM_FORMAT_MODIFIER_PROPERTIES_EXT);
+    if (stype != VK_STRUCTURE_TYPE_IMAGE_DRM_FORMAT_MODIFIER_PROPERTIES_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
-    assert(val->sType == stype);
+    if (val->sType != stype) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
     vn_decode_VkImageDrmFormatModifierPropertiesEXT_pnext(dec, val->pNext);
     vn_decode_VkImageDrmFormatModifierPropertiesEXT_self(dec, val);
 }
@@ -1354,7 +1366,7 @@ vn_decode_VkSubresourceHostMemcpySize_pnext(struct vn_cs_decoder *dec, const voi
 {
     /* no known/supported struct */
     if (vn_decode_simple_pointer(dec))
-        assert(false);
+        vn_cs_decoder_set_fatal(dec);
 }
 
 static inline void
@@ -1369,9 +1381,15 @@ vn_decode_VkSubresourceHostMemcpySize(struct vn_cs_decoder *dec, VkSubresourceHo
 {
     VkStructureType stype;
     vn_decode_VkStructureType(dec, &stype);
-    assert(stype == VK_STRUCTURE_TYPE_SUBRESOURCE_HOST_MEMCPY_SIZE);
+    if (stype != VK_STRUCTURE_TYPE_SUBRESOURCE_HOST_MEMCPY_SIZE) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
-    assert(val->sType == stype);
+    if (val->sType != stype) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
     vn_decode_VkSubresourceHostMemcpySize_pnext(dec, val->pNext);
     vn_decode_VkSubresourceHostMemcpySize_self(dec, val);
 }
@@ -1487,7 +1505,10 @@ vn_decode_VkSubresourceLayout2_pnext(struct vn_cs_decoder *dec, const void *val)
 
     vn_decode_VkStructureType(dec, &stype);
     while (true) {
-        assert(pnext);
+        if (!pnext) {
+            vn_cs_decoder_set_fatal(dec);
+            return;
+        }
         if (*(const VkStructureType *)pnext == stype)
             break;
 
@@ -1500,7 +1521,7 @@ vn_decode_VkSubresourceLayout2_pnext(struct vn_cs_decoder *dec, const void *val)
         vn_decode_VkSubresourceHostMemcpySize_self(dec, pnext);
         break;
     default:
-        assert(false);
+        vn_cs_decoder_set_fatal(dec);
         break;
     }
 }
@@ -1517,9 +1538,15 @@ vn_decode_VkSubresourceLayout2(struct vn_cs_decoder *dec, VkSubresourceLayout2 *
 {
     VkStructureType stype;
     vn_decode_VkStructureType(dec, &stype);
-    assert(stype == VK_STRUCTURE_TYPE_SUBRESOURCE_LAYOUT_2);
+    if (stype != VK_STRUCTURE_TYPE_SUBRESOURCE_LAYOUT_2) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
-    assert(val->sType == stype);
+    if (val->sType != stype) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
     vn_decode_VkSubresourceLayout2_pnext(dec, val->pNext);
     vn_decode_VkSubresourceLayout2_self(dec, val);
 }
@@ -1719,7 +1746,10 @@ static inline void vn_decode_vkGetImageMemoryRequirements_reply(struct vn_cs_dec
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetImageMemoryRequirements_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetImageMemoryRequirements_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip image */
@@ -1776,7 +1806,10 @@ static inline VkResult vn_decode_vkBindImageMemory_reply(struct vn_cs_decoder *d
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkBindImageMemory_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkBindImageMemory_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -1855,7 +1888,10 @@ static inline void vn_decode_vkGetImageSparseMemoryRequirements_reply(struct vn_
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetImageSparseMemoryRequirements_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetImageSparseMemoryRequirements_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip image */
@@ -1931,7 +1967,10 @@ static inline VkResult vn_decode_vkCreateImage_reply(struct vn_cs_decoder *dec, 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCreateImage_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCreateImage_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -1991,7 +2030,10 @@ static inline void vn_decode_vkDestroyImage_reply(struct vn_cs_decoder *dec, VkD
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkDestroyImage_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkDestroyImage_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip image */
@@ -2050,7 +2092,10 @@ static inline void vn_decode_vkGetImageSubresourceLayout_reply(struct vn_cs_deco
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetImageSubresourceLayout_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetImageSubresourceLayout_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip image */
@@ -2117,7 +2162,10 @@ static inline VkResult vn_decode_vkBindImageMemory2_reply(struct vn_cs_decoder *
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkBindImageMemory2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkBindImageMemory2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -2177,7 +2225,10 @@ static inline void vn_decode_vkGetImageMemoryRequirements2_reply(struct vn_cs_de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetImageMemoryRequirements2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetImageMemoryRequirements2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip pInfo */
@@ -2258,7 +2309,10 @@ static inline void vn_decode_vkGetImageSparseMemoryRequirements2_reply(struct vn
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetImageSparseMemoryRequirements2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetImageSparseMemoryRequirements2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip pInfo */
@@ -2326,7 +2380,10 @@ static inline void vn_decode_vkGetDeviceImageMemoryRequirements_reply(struct vn_
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetDeviceImageMemoryRequirements_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetDeviceImageMemoryRequirements_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip pInfo */
@@ -2407,7 +2464,10 @@ static inline void vn_decode_vkGetDeviceImageSparseMemoryRequirements_reply(stru
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetDeviceImageSparseMemoryRequirements_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetDeviceImageSparseMemoryRequirements_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip pInfo */
@@ -2474,7 +2534,10 @@ static inline VkResult vn_decode_vkGetImageDrmFormatModifierPropertiesEXT_reply(
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetImageDrmFormatModifierPropertiesEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetImageDrmFormatModifierPropertiesEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -2541,7 +2604,10 @@ static inline void vn_decode_vkGetImageSubresourceLayout2_reply(struct vn_cs_dec
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetImageSubresourceLayout2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetImageSubresourceLayout2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip image */
@@ -2602,7 +2668,10 @@ static inline void vn_decode_vkGetDeviceImageSubresourceLayout_reply(struct vn_c
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetDeviceImageSubresourceLayout_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetDeviceImageSubresourceLayout_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip pInfo */

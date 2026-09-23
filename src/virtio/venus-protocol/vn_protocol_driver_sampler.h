@@ -68,7 +68,10 @@ static inline VkResult vn_decode_vkCreateSampler_reply(struct vn_cs_decoder *dec
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCreateSampler_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCreateSampler_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -128,7 +131,10 @@ static inline void vn_decode_vkDestroySampler_reply(struct vn_cs_decoder *dec, V
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkDestroySampler_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkDestroySampler_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip sampler */

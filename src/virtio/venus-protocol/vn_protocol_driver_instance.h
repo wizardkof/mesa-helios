@@ -258,7 +258,10 @@ static inline VkResult vn_decode_vkCreateInstance_reply(struct vn_cs_decoder *de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCreateInstance_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCreateInstance_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -314,7 +317,10 @@ static inline void vn_decode_vkDestroyInstance_reply(struct vn_cs_decoder *dec, 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkDestroyInstance_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkDestroyInstance_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip instance */
     /* skip pAllocator */
@@ -359,7 +365,10 @@ static inline VkResult vn_decode_vkEnumerateInstanceVersion_reply(struct vn_cs_d
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkEnumerateInstanceVersion_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkEnumerateInstanceVersion_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -435,7 +444,10 @@ static inline VkResult vn_decode_vkEnumerateInstanceLayerProperties_reply(struct
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkEnumerateInstanceLayerProperties_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkEnumerateInstanceLayerProperties_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -534,7 +546,10 @@ static inline VkResult vn_decode_vkEnumerateInstanceExtensionProperties_reply(st
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkEnumerateInstanceExtensionProperties_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkEnumerateInstanceExtensionProperties_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);

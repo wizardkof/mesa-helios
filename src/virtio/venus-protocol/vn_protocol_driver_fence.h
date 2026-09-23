@@ -214,7 +214,10 @@ static inline VkResult vn_decode_vkCreateFence_reply(struct vn_cs_decoder *dec, 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCreateFence_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCreateFence_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -274,7 +277,10 @@ static inline void vn_decode_vkDestroyFence_reply(struct vn_cs_decoder *dec, VkD
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkDestroyFence_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkDestroyFence_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip fence */
@@ -336,7 +342,10 @@ static inline VkResult vn_decode_vkResetFences_reply(struct vn_cs_decoder *dec, 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkResetFences_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkResetFences_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -387,7 +396,10 @@ static inline VkResult vn_decode_vkGetFenceStatus_reply(struct vn_cs_decoder *de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetFenceStatus_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetFenceStatus_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -458,7 +470,10 @@ static inline VkResult vn_decode_vkWaitForFences_reply(struct vn_cs_decoder *dec
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkWaitForFences_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkWaitForFences_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -509,7 +524,10 @@ static inline void vn_decode_vkResetFenceResourceMESA_reply(struct vn_cs_decoder
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkResetFenceResourceMESA_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkResetFenceResourceMESA_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip fence */

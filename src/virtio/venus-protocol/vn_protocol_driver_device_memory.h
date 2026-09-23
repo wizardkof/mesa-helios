@@ -628,7 +628,7 @@ vn_decode_VkMemoryResourceAllocationSizePropertiesMESA_pnext(struct vn_cs_decode
 {
     /* no known/supported struct */
     if (vn_decode_simple_pointer(dec))
-        assert(false);
+        vn_cs_decoder_set_fatal(dec);
 }
 
 static inline void
@@ -643,9 +643,15 @@ vn_decode_VkMemoryResourceAllocationSizePropertiesMESA(struct vn_cs_decoder *dec
 {
     VkStructureType stype;
     vn_decode_VkStructureType(dec, &stype);
-    assert(stype == VK_STRUCTURE_TYPE_MEMORY_RESOURCE_ALLOCATION_SIZE_PROPERTIES_MESA);
+    if (stype != VK_STRUCTURE_TYPE_MEMORY_RESOURCE_ALLOCATION_SIZE_PROPERTIES_MESA) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
-    assert(val->sType == stype);
+    if (val->sType != stype) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
     vn_decode_VkMemoryResourceAllocationSizePropertiesMESA_pnext(dec, val->pNext);
     vn_decode_VkMemoryResourceAllocationSizePropertiesMESA_self(dec, val);
 }
@@ -759,7 +765,10 @@ vn_decode_VkMemoryResourcePropertiesMESA_pnext(struct vn_cs_decoder *dec, const 
 
     vn_decode_VkStructureType(dec, &stype);
     while (true) {
-        assert(pnext);
+        if (!pnext) {
+            vn_cs_decoder_set_fatal(dec);
+            return;
+        }
         if (*(const VkStructureType *)pnext == stype)
             break;
 
@@ -772,7 +781,7 @@ vn_decode_VkMemoryResourcePropertiesMESA_pnext(struct vn_cs_decoder *dec, const 
         vn_decode_VkMemoryResourceAllocationSizePropertiesMESA_self(dec, pnext);
         break;
     default:
-        assert(false);
+        vn_cs_decoder_set_fatal(dec);
         break;
     }
 }
@@ -789,9 +798,15 @@ vn_decode_VkMemoryResourcePropertiesMESA(struct vn_cs_decoder *dec, VkMemoryReso
 {
     VkStructureType stype;
     vn_decode_VkStructureType(dec, &stype);
-    assert(stype == VK_STRUCTURE_TYPE_MEMORY_RESOURCE_PROPERTIES_MESA);
+    if (stype != VK_STRUCTURE_TYPE_MEMORY_RESOURCE_PROPERTIES_MESA) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
-    assert(val->sType == stype);
+    if (val->sType != stype) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
     vn_decode_VkMemoryResourcePropertiesMESA_pnext(dec, val->pNext);
     vn_decode_VkMemoryResourcePropertiesMESA_self(dec, val);
 }
@@ -937,7 +952,10 @@ static inline VkResult vn_decode_vkAllocateMemory_reply(struct vn_cs_decoder *de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkAllocateMemory_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkAllocateMemory_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -997,7 +1015,10 @@ static inline void vn_decode_vkFreeMemory_reply(struct vn_cs_decoder *dec, VkDev
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkFreeMemory_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkFreeMemory_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip memory */
@@ -1042,7 +1063,10 @@ static inline void vn_decode_vkUnmapMemory_reply(struct vn_cs_decoder *dec, VkDe
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkUnmapMemory_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkUnmapMemory_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip memory */
@@ -1103,7 +1127,10 @@ static inline VkResult vn_decode_vkFlushMappedMemoryRanges_reply(struct vn_cs_de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkFlushMappedMemoryRanges_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkFlushMappedMemoryRanges_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -1169,7 +1196,10 @@ static inline VkResult vn_decode_vkInvalidateMappedMemoryRanges_reply(struct vn_
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkInvalidateMappedMemoryRanges_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkInvalidateMappedMemoryRanges_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -1223,7 +1253,10 @@ static inline void vn_decode_vkGetDeviceMemoryCommitment_reply(struct vn_cs_deco
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetDeviceMemoryCommitment_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetDeviceMemoryCommitment_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip memory */
@@ -1277,7 +1310,10 @@ static inline uint64_t vn_decode_vkGetDeviceMemoryOpaqueCaptureAddress_reply(str
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetDeviceMemoryOpaqueCaptureAddress_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetDeviceMemoryOpaqueCaptureAddress_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     uint64_t ret;
     vn_decode_uint64_t(dec, &ret);
@@ -1330,7 +1366,10 @@ static inline VkResult vn_decode_vkUnmapMemory2_reply(struct vn_cs_decoder *dec,
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkUnmapMemory2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkUnmapMemory2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -1388,7 +1427,10 @@ static inline VkResult vn_decode_vkGetMemoryResourcePropertiesMESA_reply(struct 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetMemoryResourcePropertiesMESA_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetMemoryResourcePropertiesMESA_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);

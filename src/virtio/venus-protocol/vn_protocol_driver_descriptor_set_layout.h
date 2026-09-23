@@ -267,7 +267,7 @@ vn_decode_VkDescriptorSetVariableDescriptorCountLayoutSupport_pnext(struct vn_cs
 {
     /* no known/supported struct */
     if (vn_decode_simple_pointer(dec))
-        assert(false);
+        vn_cs_decoder_set_fatal(dec);
 }
 
 static inline void
@@ -282,9 +282,15 @@ vn_decode_VkDescriptorSetVariableDescriptorCountLayoutSupport(struct vn_cs_decod
 {
     VkStructureType stype;
     vn_decode_VkStructureType(dec, &stype);
-    assert(stype == VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_LAYOUT_SUPPORT);
+    if (stype != VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_LAYOUT_SUPPORT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
-    assert(val->sType == stype);
+    if (val->sType != stype) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
     vn_decode_VkDescriptorSetVariableDescriptorCountLayoutSupport_pnext(dec, val->pNext);
     vn_decode_VkDescriptorSetVariableDescriptorCountLayoutSupport_self(dec, val);
 }
@@ -398,7 +404,10 @@ vn_decode_VkDescriptorSetLayoutSupport_pnext(struct vn_cs_decoder *dec, const vo
 
     vn_decode_VkStructureType(dec, &stype);
     while (true) {
-        assert(pnext);
+        if (!pnext) {
+            vn_cs_decoder_set_fatal(dec);
+            return;
+        }
         if (*(const VkStructureType *)pnext == stype)
             break;
 
@@ -411,7 +420,7 @@ vn_decode_VkDescriptorSetLayoutSupport_pnext(struct vn_cs_decoder *dec, const vo
         vn_decode_VkDescriptorSetVariableDescriptorCountLayoutSupport_self(dec, pnext);
         break;
     default:
-        assert(false);
+        vn_cs_decoder_set_fatal(dec);
         break;
     }
 }
@@ -428,9 +437,15 @@ vn_decode_VkDescriptorSetLayoutSupport(struct vn_cs_decoder *dec, VkDescriptorSe
 {
     VkStructureType stype;
     vn_decode_VkStructureType(dec, &stype);
-    assert(stype == VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_SUPPORT);
+    if (stype != VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_SUPPORT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
-    assert(val->sType == stype);
+    if (val->sType != stype) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
     vn_decode_VkDescriptorSetLayoutSupport_pnext(dec, val->pNext);
     vn_decode_VkDescriptorSetLayoutSupport_self(dec, val);
 }
@@ -576,7 +591,10 @@ static inline VkResult vn_decode_vkCreateDescriptorSetLayout_reply(struct vn_cs_
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCreateDescriptorSetLayout_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCreateDescriptorSetLayout_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -636,7 +654,10 @@ static inline void vn_decode_vkDestroyDescriptorSetLayout_reply(struct vn_cs_dec
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkDestroyDescriptorSetLayout_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkDestroyDescriptorSetLayout_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip descriptorSetLayout */
@@ -692,7 +713,10 @@ static inline void vn_decode_vkGetDescriptorSetLayoutSupport_reply(struct vn_cs_
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetDescriptorSetLayoutSupport_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetDescriptorSetLayoutSupport_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip pCreateInfo */

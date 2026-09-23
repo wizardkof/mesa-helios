@@ -2709,7 +2709,7 @@ vn_decode_VkMemoryDedicatedRequirements_pnext(struct vn_cs_decoder *dec, const v
 {
     /* no known/supported struct */
     if (vn_decode_simple_pointer(dec))
-        assert(false);
+        vn_cs_decoder_set_fatal(dec);
 }
 
 static inline void
@@ -2725,9 +2725,15 @@ vn_decode_VkMemoryDedicatedRequirements(struct vn_cs_decoder *dec, VkMemoryDedic
 {
     VkStructureType stype;
     vn_decode_VkStructureType(dec, &stype);
-    assert(stype == VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS);
+    if (stype != VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
-    assert(val->sType == stype);
+    if (val->sType != stype) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
     vn_decode_VkMemoryDedicatedRequirements_pnext(dec, val->pNext);
     vn_decode_VkMemoryDedicatedRequirements_self(dec, val);
 }
@@ -2843,7 +2849,10 @@ vn_decode_VkMemoryRequirements2_pnext(struct vn_cs_decoder *dec, const void *val
 
     vn_decode_VkStructureType(dec, &stype);
     while (true) {
-        assert(pnext);
+        if (!pnext) {
+            vn_cs_decoder_set_fatal(dec);
+            return;
+        }
         if (*(const VkStructureType *)pnext == stype)
             break;
 
@@ -2856,7 +2865,7 @@ vn_decode_VkMemoryRequirements2_pnext(struct vn_cs_decoder *dec, const void *val
         vn_decode_VkMemoryDedicatedRequirements_self(dec, pnext);
         break;
     default:
-        assert(false);
+        vn_cs_decoder_set_fatal(dec);
         break;
     }
 }
@@ -2873,9 +2882,15 @@ vn_decode_VkMemoryRequirements2(struct vn_cs_decoder *dec, VkMemoryRequirements2
 {
     VkStructureType stype;
     vn_decode_VkStructureType(dec, &stype);
-    assert(stype == VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2);
+    if (stype != VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
-    assert(val->sType == stype);
+    if (val->sType != stype) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
     vn_decode_VkMemoryRequirements2_pnext(dec, val->pNext);
     vn_decode_VkMemoryRequirements2_self(dec, val);
 }

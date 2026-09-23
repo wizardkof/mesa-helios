@@ -121,7 +121,10 @@ static inline VkResult vn_decode_vkCreateEvent_reply(struct vn_cs_decoder *dec, 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCreateEvent_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCreateEvent_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -181,7 +184,10 @@ static inline void vn_decode_vkDestroyEvent_reply(struct vn_cs_decoder *dec, VkD
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkDestroyEvent_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkDestroyEvent_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip event */
@@ -228,7 +234,10 @@ static inline VkResult vn_decode_vkGetEventStatus_reply(struct vn_cs_decoder *de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetEventStatus_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetEventStatus_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -278,7 +287,10 @@ static inline VkResult vn_decode_vkSetEvent_reply(struct vn_cs_decoder *dec, VkD
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkSetEvent_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkSetEvent_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -328,7 +340,10 @@ static inline VkResult vn_decode_vkResetEvent_reply(struct vn_cs_decoder *dec, V
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkResetEvent_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkResetEvent_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);

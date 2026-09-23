@@ -4426,7 +4426,10 @@ static inline VkResult vn_decode_vkAllocateCommandBuffers_reply(struct vn_cs_dec
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkAllocateCommandBuffers_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkAllocateCommandBuffers_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -4500,7 +4503,10 @@ static inline void vn_decode_vkFreeCommandBuffers_reply(struct vn_cs_decoder *de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkFreeCommandBuffers_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkFreeCommandBuffers_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip commandPool */
@@ -4551,7 +4557,10 @@ static inline VkResult vn_decode_vkBeginCommandBuffer_reply(struct vn_cs_decoder
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkBeginCommandBuffer_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkBeginCommandBuffer_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -4598,7 +4607,10 @@ static inline VkResult vn_decode_vkEndCommandBuffer_reply(struct vn_cs_decoder *
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkEndCommandBuffer_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkEndCommandBuffer_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -4647,7 +4659,10 @@ static inline VkResult vn_decode_vkResetCommandBuffer_reply(struct vn_cs_decoder
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkResetCommandBuffer_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkResetCommandBuffer_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -4698,7 +4713,10 @@ static inline void vn_decode_vkCmdBindPipeline_reply(struct vn_cs_decoder *dec, 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdBindPipeline_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdBindPipeline_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pipelineBindPoint */
@@ -4743,7 +4761,10 @@ static inline void vn_decode_vkCmdSetPrimitiveRestartIndexEXT_reply(struct vn_cs
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetPrimitiveRestartIndexEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetPrimitiveRestartIndexEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip primitiveRestartIndex */
@@ -4787,7 +4808,10 @@ static inline void vn_decode_vkCmdSetAttachmentFeedbackLoopEnableEXT_reply(struc
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetAttachmentFeedbackLoopEnableEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetAttachmentFeedbackLoopEnableEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip aspectMask */
@@ -4849,7 +4873,10 @@ static inline void vn_decode_vkCmdSetViewport_reply(struct vn_cs_decoder *dec, V
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetViewport_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetViewport_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip firstViewport */
@@ -4913,7 +4940,10 @@ static inline void vn_decode_vkCmdSetScissor_reply(struct vn_cs_decoder *dec, Vk
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetScissor_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetScissor_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip firstScissor */
@@ -4959,7 +4989,10 @@ static inline void vn_decode_vkCmdSetLineWidth_reply(struct vn_cs_decoder *dec, 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetLineWidth_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetLineWidth_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip lineWidth */
@@ -5009,7 +5042,10 @@ static inline void vn_decode_vkCmdSetDepthBias_reply(struct vn_cs_decoder *dec, 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetDepthBias_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetDepthBias_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip depthBiasConstantFactor */
@@ -5057,7 +5093,10 @@ static inline void vn_decode_vkCmdSetBlendConstants_reply(struct vn_cs_decoder *
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetBlendConstants_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetBlendConstants_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip blendConstants */
@@ -5104,7 +5143,10 @@ static inline void vn_decode_vkCmdSetDepthBounds_reply(struct vn_cs_decoder *dec
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetDepthBounds_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetDepthBounds_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip minDepthBounds */
@@ -5152,7 +5194,10 @@ static inline void vn_decode_vkCmdSetStencilCompareMask_reply(struct vn_cs_decod
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetStencilCompareMask_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetStencilCompareMask_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip faceMask */
@@ -5200,7 +5245,10 @@ static inline void vn_decode_vkCmdSetStencilWriteMask_reply(struct vn_cs_decoder
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetStencilWriteMask_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetStencilWriteMask_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip faceMask */
@@ -5248,7 +5296,10 @@ static inline void vn_decode_vkCmdSetStencilReference_reply(struct vn_cs_decoder
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetStencilReference_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetStencilReference_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip faceMask */
@@ -5333,7 +5384,10 @@ static inline void vn_decode_vkCmdBindDescriptorSets_reply(struct vn_cs_decoder 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdBindDescriptorSets_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdBindDescriptorSets_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pipelineBindPoint */
@@ -5389,7 +5443,10 @@ static inline void vn_decode_vkCmdBindIndexBuffer_reply(struct vn_cs_decoder *de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdBindIndexBuffer_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdBindIndexBuffer_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip buffer */
@@ -5466,7 +5523,10 @@ static inline void vn_decode_vkCmdBindVertexBuffers_reply(struct vn_cs_decoder *
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdBindVertexBuffers_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdBindVertexBuffers_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip firstBinding */
@@ -5522,7 +5582,10 @@ static inline void vn_decode_vkCmdDraw_reply(struct vn_cs_decoder *dec, VkComman
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdDraw_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdDraw_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip vertexCount */
@@ -5581,7 +5644,10 @@ static inline void vn_decode_vkCmdDrawIndexed_reply(struct vn_cs_decoder *dec, V
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdDrawIndexed_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdDrawIndexed_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip indexCount */
@@ -5654,7 +5720,10 @@ static inline void vn_decode_vkCmdDrawMultiEXT_reply(struct vn_cs_decoder *dec, 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdDrawMultiEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdDrawMultiEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip drawCount */
@@ -5733,7 +5802,10 @@ static inline void vn_decode_vkCmdDrawMultiIndexedEXT_reply(struct vn_cs_decoder
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdDrawMultiIndexedEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdDrawMultiIndexedEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip drawCount */
@@ -5791,7 +5863,10 @@ static inline void vn_decode_vkCmdDrawIndirect_reply(struct vn_cs_decoder *dec, 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdDrawIndirect_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdDrawIndirect_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip buffer */
@@ -5847,7 +5922,10 @@ static inline void vn_decode_vkCmdDrawIndexedIndirect_reply(struct vn_cs_decoder
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdDrawIndexedIndirect_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdDrawIndexedIndirect_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip buffer */
@@ -5900,7 +5978,10 @@ static inline void vn_decode_vkCmdDispatch_reply(struct vn_cs_decoder *dec, VkCo
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdDispatch_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdDispatch_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip groupCountX */
@@ -5949,7 +6030,10 @@ static inline void vn_decode_vkCmdDispatchIndirect_reply(struct vn_cs_decoder *d
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdDispatchIndirect_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdDispatchIndirect_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip buffer */
@@ -6015,7 +6099,10 @@ static inline void vn_decode_vkCmdCopyBuffer_reply(struct vn_cs_decoder *dec, Vk
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdCopyBuffer_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdCopyBuffer_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip srcBuffer */
@@ -6089,7 +6176,10 @@ static inline void vn_decode_vkCmdCopyImage_reply(struct vn_cs_decoder *dec, VkC
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdCopyImage_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdCopyImage_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip srcImage */
@@ -6168,7 +6258,10 @@ static inline void vn_decode_vkCmdBlitImage_reply(struct vn_cs_decoder *dec, VkC
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdBlitImage_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdBlitImage_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip srcImage */
@@ -6242,7 +6335,10 @@ static inline void vn_decode_vkCmdCopyBufferToImage_reply(struct vn_cs_decoder *
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdCopyBufferToImage_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdCopyBufferToImage_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip srcBuffer */
@@ -6314,7 +6410,10 @@ static inline void vn_decode_vkCmdCopyImageToBuffer_reply(struct vn_cs_decoder *
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdCopyImageToBuffer_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdCopyImageToBuffer_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip srcImage */
@@ -6365,7 +6464,10 @@ static inline void vn_decode_vkCmdCopyMemoryIndirectKHR_reply(struct vn_cs_decod
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdCopyMemoryIndirectKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdCopyMemoryIndirectKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pCopyMemoryIndirectInfo */
@@ -6412,7 +6514,10 @@ static inline void vn_decode_vkCmdCopyMemoryToImageIndirectKHR_reply(struct vn_c
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdCopyMemoryToImageIndirectKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdCopyMemoryToImageIndirectKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pCopyMemoryToImageIndirectInfo */
@@ -6475,7 +6580,10 @@ static inline void vn_decode_vkCmdUpdateBuffer_reply(struct vn_cs_decoder *dec, 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdUpdateBuffer_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdUpdateBuffer_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip dstBuffer */
@@ -6531,7 +6639,10 @@ static inline void vn_decode_vkCmdFillBuffer_reply(struct vn_cs_decoder *dec, Vk
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdFillBuffer_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdFillBuffer_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip dstBuffer */
@@ -6605,7 +6716,10 @@ static inline void vn_decode_vkCmdClearColorImage_reply(struct vn_cs_decoder *de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdClearColorImage_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdClearColorImage_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip image */
@@ -6680,7 +6794,10 @@ static inline void vn_decode_vkCmdClearDepthStencilImage_reply(struct vn_cs_deco
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdClearDepthStencilImage_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdClearDepthStencilImage_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip image */
@@ -6761,7 +6878,10 @@ static inline void vn_decode_vkCmdClearAttachments_reply(struct vn_cs_decoder *d
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdClearAttachments_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdClearAttachments_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip attachmentCount */
@@ -6835,7 +6955,10 @@ static inline void vn_decode_vkCmdResolveImage_reply(struct vn_cs_decoder *dec, 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdResolveImage_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdResolveImage_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip srcImage */
@@ -6887,7 +7010,10 @@ static inline void vn_decode_vkCmdSetEvent_reply(struct vn_cs_decoder *dec, VkCo
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetEvent_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetEvent_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip event */
@@ -6935,7 +7061,10 @@ static inline void vn_decode_vkCmdResetEvent_reply(struct vn_cs_decoder *dec, Vk
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdResetEvent_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdResetEvent_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip event */
@@ -7055,7 +7184,10 @@ static inline void vn_decode_vkCmdWaitEvents_reply(struct vn_cs_decoder *dec, Vk
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdWaitEvents_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdWaitEvents_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip eventCount */
@@ -7168,7 +7300,10 @@ static inline void vn_decode_vkCmdPipelineBarrier_reply(struct vn_cs_decoder *de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdPipelineBarrier_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdPipelineBarrier_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip srcStageMask */
@@ -7226,7 +7361,10 @@ static inline void vn_decode_vkCmdBeginQuery_reply(struct vn_cs_decoder *dec, Vk
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdBeginQuery_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdBeginQuery_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip queryPool */
@@ -7275,7 +7413,10 @@ static inline void vn_decode_vkCmdEndQuery_reply(struct vn_cs_decoder *dec, VkCo
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdEndQuery_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdEndQuery_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip queryPool */
@@ -7323,7 +7464,10 @@ static inline void vn_decode_vkCmdBeginConditionalRenderingEXT_reply(struct vn_c
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdBeginConditionalRenderingEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdBeginConditionalRenderingEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pConditionalRenderingBegin */
@@ -7364,7 +7508,10 @@ static inline void vn_decode_vkCmdEndConditionalRenderingEXT_reply(struct vn_cs_
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdEndConditionalRenderingEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdEndConditionalRenderingEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
 }
@@ -7413,7 +7560,10 @@ static inline void vn_decode_vkCmdResetQueryPool_reply(struct vn_cs_decoder *dec
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdResetQueryPool_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdResetQueryPool_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip queryPool */
@@ -7465,7 +7615,10 @@ static inline void vn_decode_vkCmdWriteTimestamp_reply(struct vn_cs_decoder *dec
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdWriteTimestamp_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdWriteTimestamp_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pipelineStage */
@@ -7529,7 +7682,10 @@ static inline void vn_decode_vkCmdCopyQueryPoolResults_reply(struct vn_cs_decode
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdCopyQueryPoolResults_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdCopyQueryPoolResults_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip queryPool */
@@ -7601,7 +7757,10 @@ static inline void vn_decode_vkCmdPushConstants_reply(struct vn_cs_decoder *dec,
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdPushConstants_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdPushConstants_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip layout */
@@ -7655,7 +7814,10 @@ static inline void vn_decode_vkCmdBeginRenderPass_reply(struct vn_cs_decoder *de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdBeginRenderPass_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdBeginRenderPass_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pRenderPassBegin */
@@ -7700,7 +7862,10 @@ static inline void vn_decode_vkCmdNextSubpass_reply(struct vn_cs_decoder *dec, V
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdNextSubpass_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdNextSubpass_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip contents */
@@ -7741,7 +7906,10 @@ static inline void vn_decode_vkCmdEndRenderPass_reply(struct vn_cs_decoder *dec,
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdEndRenderPass_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdEndRenderPass_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
 }
@@ -7799,7 +7967,10 @@ static inline void vn_decode_vkCmdExecuteCommands_reply(struct vn_cs_decoder *de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdExecuteCommands_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdExecuteCommands_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip commandBufferCount */
@@ -7850,7 +8021,10 @@ static inline void vn_decode_vkCmdExecuteGeneratedCommandsEXT_reply(struct vn_cs
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdExecuteGeneratedCommandsEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdExecuteGeneratedCommandsEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip isPreprocessed */
@@ -7901,7 +8075,10 @@ static inline void vn_decode_vkCmdPreprocessGeneratedCommandsEXT_reply(struct vn
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdPreprocessGeneratedCommandsEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdPreprocessGeneratedCommandsEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pGeneratedCommandsInfo */
@@ -7970,7 +8147,10 @@ static inline void vn_decode_vkCmdPushDescriptorSet_reply(struct vn_cs_decoder *
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdPushDescriptorSet_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdPushDescriptorSet_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pipelineBindPoint */
@@ -8018,7 +8198,10 @@ static inline void vn_decode_vkCmdSetDeviceMask_reply(struct vn_cs_decoder *dec,
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetDeviceMask_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetDeviceMask_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip deviceMask */
@@ -8077,7 +8260,10 @@ static inline void vn_decode_vkCmdDispatchBase_reply(struct vn_cs_decoder *dec, 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdDispatchBase_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdDispatchBase_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip baseGroupX */
@@ -8129,7 +8315,10 @@ static inline void vn_decode_vkCmdSetSampleLocationsEXT_reply(struct vn_cs_decod
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetSampleLocationsEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetSampleLocationsEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pSampleLocationsInfo */
@@ -8182,7 +8371,10 @@ static inline void vn_decode_vkCmdBeginRenderPass2_reply(struct vn_cs_decoder *d
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdBeginRenderPass2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdBeginRenderPass2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pRenderPassBegin */
@@ -8236,7 +8428,10 @@ static inline void vn_decode_vkCmdNextSubpass2_reply(struct vn_cs_decoder *dec, 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdNextSubpass2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdNextSubpass2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pSubpassBeginInfo */
@@ -8284,7 +8479,10 @@ static inline void vn_decode_vkCmdEndRenderPass2_reply(struct vn_cs_decoder *dec
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdEndRenderPass2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdEndRenderPass2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pSubpassEndInfo */
@@ -8343,7 +8541,10 @@ static inline void vn_decode_vkCmdDrawIndirectCount_reply(struct vn_cs_decoder *
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdDrawIndirectCount_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdDrawIndirectCount_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip buffer */
@@ -8407,7 +8608,10 @@ static inline void vn_decode_vkCmdDrawIndexedIndirectCount_reply(struct vn_cs_de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdDrawIndexedIndirectCount_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdDrawIndexedIndirectCount_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip buffer */
@@ -8500,7 +8704,10 @@ static inline void vn_decode_vkCmdBindTransformFeedbackBuffersEXT_reply(struct v
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdBindTransformFeedbackBuffersEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdBindTransformFeedbackBuffersEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip firstBinding */
@@ -8579,7 +8786,10 @@ static inline void vn_decode_vkCmdBeginTransformFeedbackEXT_reply(struct vn_cs_d
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdBeginTransformFeedbackEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdBeginTransformFeedbackEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip firstCounterBuffer */
@@ -8657,7 +8867,10 @@ static inline void vn_decode_vkCmdEndTransformFeedbackEXT_reply(struct vn_cs_dec
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdEndTransformFeedbackEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdEndTransformFeedbackEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip firstCounterBuffer */
@@ -8713,7 +8926,10 @@ static inline void vn_decode_vkCmdBeginQueryIndexedEXT_reply(struct vn_cs_decode
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdBeginQueryIndexedEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdBeginQueryIndexedEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip queryPool */
@@ -8766,7 +8982,10 @@ static inline void vn_decode_vkCmdEndQueryIndexedEXT_reply(struct vn_cs_decoder 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdEndQueryIndexedEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdEndQueryIndexedEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip queryPool */
@@ -8827,7 +9046,10 @@ static inline void vn_decode_vkCmdDrawIndirectByteCountEXT_reply(struct vn_cs_de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdDrawIndirectByteCountEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdDrawIndirectByteCountEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip instanceCount */
@@ -8882,7 +9104,10 @@ static inline void vn_decode_vkCmdDrawMeshTasksEXT_reply(struct vn_cs_decoder *d
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdDrawMeshTasksEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdDrawMeshTasksEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip groupCountX */
@@ -8937,7 +9162,10 @@ static inline void vn_decode_vkCmdDrawMeshTasksIndirectEXT_reply(struct vn_cs_de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdDrawMeshTasksIndirectEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdDrawMeshTasksIndirectEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip buffer */
@@ -8999,7 +9227,10 @@ static inline void vn_decode_vkCmdDrawMeshTasksIndirectCountEXT_reply(struct vn_
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdDrawMeshTasksIndirectCountEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdDrawMeshTasksIndirectCountEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip buffer */
@@ -9051,7 +9282,10 @@ static inline void vn_decode_vkCmdCopyAccelerationStructureKHR_reply(struct vn_c
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdCopyAccelerationStructureKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdCopyAccelerationStructureKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pInfo */
@@ -9098,7 +9332,10 @@ static inline void vn_decode_vkCmdCopyAccelerationStructureToMemoryKHR_reply(str
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdCopyAccelerationStructureToMemoryKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdCopyAccelerationStructureToMemoryKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pInfo */
@@ -9145,7 +9382,10 @@ static inline void vn_decode_vkCmdCopyMemoryToAccelerationStructureKHR_reply(str
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdCopyMemoryToAccelerationStructureKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdCopyMemoryToAccelerationStructureKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pInfo */
@@ -9213,7 +9453,10 @@ static inline void vn_decode_vkCmdWriteAccelerationStructuresPropertiesKHR_reply
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdWriteAccelerationStructuresPropertiesKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdWriteAccelerationStructuresPropertiesKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip accelerationStructureCount */
@@ -9291,7 +9534,10 @@ static inline void vn_decode_vkCmdTraceRaysKHR_reply(struct vn_cs_decoder *dec, 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdTraceRaysKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdTraceRaysKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pRaygenShaderBindingTable */
@@ -9365,7 +9611,10 @@ static inline void vn_decode_vkCmdTraceRaysIndirectKHR_reply(struct vn_cs_decode
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdTraceRaysIndirectKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdTraceRaysIndirectKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pRaygenShaderBindingTable */
@@ -9413,7 +9662,10 @@ static inline void vn_decode_vkCmdTraceRaysIndirect2KHR_reply(struct vn_cs_decod
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdTraceRaysIndirect2KHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdTraceRaysIndirect2KHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip indirectDeviceAddress */
@@ -9457,7 +9709,10 @@ static inline void vn_decode_vkCmdSetRayTracingPipelineStackSizeKHR_reply(struct
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetRayTracingPipelineStackSizeKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetRayTracingPipelineStackSizeKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pipelineStackSize */
@@ -9504,7 +9759,10 @@ static inline void vn_decode_vkCmdSetLineStipple_reply(struct vn_cs_decoder *dec
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetLineStipple_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetLineStipple_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip lineStippleFactor */
@@ -9585,7 +9843,10 @@ static inline void vn_decode_vkCmdBuildAccelerationStructuresKHR_reply(struct vn
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdBuildAccelerationStructuresKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdBuildAccelerationStructuresKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip infoCount */
@@ -9691,7 +9952,10 @@ static inline void vn_decode_vkCmdBuildAccelerationStructuresIndirectKHR_reply(s
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdBuildAccelerationStructuresIndirectKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdBuildAccelerationStructuresIndirectKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip infoCount */
@@ -9739,7 +10003,10 @@ static inline void vn_decode_vkCmdSetCullMode_reply(struct vn_cs_decoder *dec, V
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetCullMode_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetCullMode_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip cullMode */
@@ -9783,7 +10050,10 @@ static inline void vn_decode_vkCmdSetFrontFace_reply(struct vn_cs_decoder *dec, 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetFrontFace_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetFrontFace_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip frontFace */
@@ -9827,7 +10097,10 @@ static inline void vn_decode_vkCmdSetPrimitiveTopology_reply(struct vn_cs_decode
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetPrimitiveTopology_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetPrimitiveTopology_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip primitiveTopology */
@@ -9886,7 +10159,10 @@ static inline void vn_decode_vkCmdSetViewportWithCount_reply(struct vn_cs_decode
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetViewportWithCount_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetViewportWithCount_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip viewportCount */
@@ -9946,7 +10222,10 @@ static inline void vn_decode_vkCmdSetScissorWithCount_reply(struct vn_cs_decoder
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetScissorWithCount_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetScissorWithCount_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip scissorCount */
@@ -10000,7 +10279,10 @@ static inline void vn_decode_vkCmdBindIndexBuffer2_reply(struct vn_cs_decoder *d
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdBindIndexBuffer2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdBindIndexBuffer2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip buffer */
@@ -10104,7 +10386,10 @@ static inline void vn_decode_vkCmdBindVertexBuffers2_reply(struct vn_cs_decoder 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdBindVertexBuffers2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdBindVertexBuffers2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip firstBinding */
@@ -10153,7 +10438,10 @@ static inline void vn_decode_vkCmdSetDepthTestEnable_reply(struct vn_cs_decoder 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetDepthTestEnable_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetDepthTestEnable_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip depthTestEnable */
@@ -10197,7 +10485,10 @@ static inline void vn_decode_vkCmdSetDepthWriteEnable_reply(struct vn_cs_decoder
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetDepthWriteEnable_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetDepthWriteEnable_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip depthWriteEnable */
@@ -10241,7 +10532,10 @@ static inline void vn_decode_vkCmdSetDepthCompareOp_reply(struct vn_cs_decoder *
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetDepthCompareOp_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetDepthCompareOp_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip depthCompareOp */
@@ -10285,7 +10579,10 @@ static inline void vn_decode_vkCmdSetDepthBoundsTestEnable_reply(struct vn_cs_de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetDepthBoundsTestEnable_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetDepthBoundsTestEnable_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip depthBoundsTestEnable */
@@ -10329,7 +10626,10 @@ static inline void vn_decode_vkCmdSetStencilTestEnable_reply(struct vn_cs_decode
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetStencilTestEnable_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetStencilTestEnable_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip stencilTestEnable */
@@ -10385,7 +10685,10 @@ static inline void vn_decode_vkCmdSetStencilOp_reply(struct vn_cs_decoder *dec, 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetStencilOp_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetStencilOp_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip faceMask */
@@ -10433,7 +10736,10 @@ static inline void vn_decode_vkCmdSetPatchControlPointsEXT_reply(struct vn_cs_de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetPatchControlPointsEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetPatchControlPointsEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip patchControlPoints */
@@ -10477,7 +10783,10 @@ static inline void vn_decode_vkCmdSetRasterizerDiscardEnable_reply(struct vn_cs_
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetRasterizerDiscardEnable_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetRasterizerDiscardEnable_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip rasterizerDiscardEnable */
@@ -10521,7 +10830,10 @@ static inline void vn_decode_vkCmdSetDepthBiasEnable_reply(struct vn_cs_decoder 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetDepthBiasEnable_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetDepthBiasEnable_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip depthBiasEnable */
@@ -10565,7 +10877,10 @@ static inline void vn_decode_vkCmdSetLogicOpEXT_reply(struct vn_cs_decoder *dec,
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetLogicOpEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetLogicOpEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip logicOp */
@@ -10609,7 +10924,10 @@ static inline void vn_decode_vkCmdSetPrimitiveRestartEnable_reply(struct vn_cs_d
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetPrimitiveRestartEnable_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetPrimitiveRestartEnable_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip primitiveRestartEnable */
@@ -10653,7 +10971,10 @@ static inline void vn_decode_vkCmdSetTessellationDomainOriginEXT_reply(struct vn
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetTessellationDomainOriginEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetTessellationDomainOriginEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip domainOrigin */
@@ -10697,7 +11018,10 @@ static inline void vn_decode_vkCmdSetDepthClampEnableEXT_reply(struct vn_cs_deco
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetDepthClampEnableEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetDepthClampEnableEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip depthClampEnable */
@@ -10741,7 +11065,10 @@ static inline void vn_decode_vkCmdSetPolygonModeEXT_reply(struct vn_cs_decoder *
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetPolygonModeEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetPolygonModeEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip polygonMode */
@@ -10785,7 +11112,10 @@ static inline void vn_decode_vkCmdSetRasterizationSamplesEXT_reply(struct vn_cs_
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetRasterizationSamplesEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetRasterizationSamplesEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip rasterizationSamples */
@@ -10842,7 +11172,10 @@ static inline void vn_decode_vkCmdSetSampleMaskEXT_reply(struct vn_cs_decoder *d
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetSampleMaskEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetSampleMaskEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip samples */
@@ -10887,7 +11220,10 @@ static inline void vn_decode_vkCmdSetAlphaToCoverageEnableEXT_reply(struct vn_cs
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetAlphaToCoverageEnableEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetAlphaToCoverageEnableEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip alphaToCoverageEnable */
@@ -10931,7 +11267,10 @@ static inline void vn_decode_vkCmdSetAlphaToOneEnableEXT_reply(struct vn_cs_deco
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetAlphaToOneEnableEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetAlphaToOneEnableEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip alphaToOneEnable */
@@ -10975,7 +11314,10 @@ static inline void vn_decode_vkCmdSetLogicOpEnableEXT_reply(struct vn_cs_decoder
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetLogicOpEnableEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetLogicOpEnableEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip logicOpEnable */
@@ -11035,7 +11377,10 @@ static inline void vn_decode_vkCmdSetColorBlendEnableEXT_reply(struct vn_cs_deco
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetColorBlendEnableEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetColorBlendEnableEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip firstAttachment */
@@ -11099,7 +11444,10 @@ static inline void vn_decode_vkCmdSetColorBlendEquationEXT_reply(struct vn_cs_de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetColorBlendEquationEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetColorBlendEquationEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip firstAttachment */
@@ -11163,7 +11511,10 @@ static inline void vn_decode_vkCmdSetColorWriteMaskEXT_reply(struct vn_cs_decode
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetColorWriteMaskEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetColorWriteMaskEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip firstAttachment */
@@ -11209,7 +11560,10 @@ static inline void vn_decode_vkCmdSetRasterizationStreamEXT_reply(struct vn_cs_d
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetRasterizationStreamEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetRasterizationStreamEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip rasterizationStream */
@@ -11253,7 +11607,10 @@ static inline void vn_decode_vkCmdSetConservativeRasterizationModeEXT_reply(stru
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetConservativeRasterizationModeEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetConservativeRasterizationModeEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip conservativeRasterizationMode */
@@ -11297,7 +11654,10 @@ static inline void vn_decode_vkCmdSetExtraPrimitiveOverestimationSizeEXT_reply(s
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetExtraPrimitiveOverestimationSizeEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetExtraPrimitiveOverestimationSizeEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip extraPrimitiveOverestimationSize */
@@ -11341,7 +11701,10 @@ static inline void vn_decode_vkCmdSetDepthClipEnableEXT_reply(struct vn_cs_decod
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetDepthClipEnableEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetDepthClipEnableEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip depthClipEnable */
@@ -11385,7 +11748,10 @@ static inline void vn_decode_vkCmdSetSampleLocationsEnableEXT_reply(struct vn_cs
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetSampleLocationsEnableEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetSampleLocationsEnableEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip sampleLocationsEnable */
@@ -11447,7 +11813,10 @@ static inline void vn_decode_vkCmdSetColorBlendAdvancedEXT_reply(struct vn_cs_de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetColorBlendAdvancedEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetColorBlendAdvancedEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip firstAttachment */
@@ -11493,7 +11862,10 @@ static inline void vn_decode_vkCmdSetProvokingVertexModeEXT_reply(struct vn_cs_d
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetProvokingVertexModeEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetProvokingVertexModeEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip provokingVertexMode */
@@ -11537,7 +11909,10 @@ static inline void vn_decode_vkCmdSetLineRasterizationModeEXT_reply(struct vn_cs
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetLineRasterizationModeEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetLineRasterizationModeEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip lineRasterizationMode */
@@ -11581,7 +11956,10 @@ static inline void vn_decode_vkCmdSetLineStippleEnableEXT_reply(struct vn_cs_dec
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetLineStippleEnableEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetLineStippleEnableEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip stippledLineEnable */
@@ -11625,7 +12003,10 @@ static inline void vn_decode_vkCmdSetDepthClipNegativeOneToOneEXT_reply(struct v
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetDepthClipNegativeOneToOneEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetDepthClipNegativeOneToOneEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip negativeOneToOne */
@@ -11669,7 +12050,10 @@ static inline void vn_decode_vkCmdSetCoverageModulationModeNV_reply(struct vn_cs
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetCoverageModulationModeNV_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetCoverageModulationModeNV_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip coverageModulationMode */
@@ -11713,7 +12097,10 @@ static inline void vn_decode_vkCmdSetCoverageModulationTableEnableNV_reply(struc
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetCoverageModulationTableEnableNV_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetCoverageModulationTableEnableNV_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip coverageModulationTableEnable */
@@ -11770,7 +12157,10 @@ static inline void vn_decode_vkCmdSetCoverageModulationTableNV_reply(struct vn_c
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetCoverageModulationTableNV_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetCoverageModulationTableNV_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip coverageModulationTableCount */
@@ -11818,7 +12208,10 @@ static inline void vn_decode_vkCmdCopyBuffer2_reply(struct vn_cs_decoder *dec, V
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdCopyBuffer2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdCopyBuffer2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pCopyBufferInfo */
@@ -11865,7 +12258,10 @@ static inline void vn_decode_vkCmdCopyImage2_reply(struct vn_cs_decoder *dec, Vk
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdCopyImage2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdCopyImage2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pCopyImageInfo */
@@ -11912,7 +12308,10 @@ static inline void vn_decode_vkCmdBlitImage2_reply(struct vn_cs_decoder *dec, Vk
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdBlitImage2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdBlitImage2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pBlitImageInfo */
@@ -11959,7 +12358,10 @@ static inline void vn_decode_vkCmdCopyBufferToImage2_reply(struct vn_cs_decoder 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdCopyBufferToImage2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdCopyBufferToImage2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pCopyBufferToImageInfo */
@@ -12006,7 +12408,10 @@ static inline void vn_decode_vkCmdCopyImageToBuffer2_reply(struct vn_cs_decoder 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdCopyImageToBuffer2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdCopyImageToBuffer2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pCopyImageToBufferInfo */
@@ -12053,7 +12458,10 @@ static inline void vn_decode_vkCmdResolveImage2_reply(struct vn_cs_decoder *dec,
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdResolveImage2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdResolveImage2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pResolveImageInfo */
@@ -12105,7 +12513,10 @@ static inline void vn_decode_vkCmdSetFragmentShadingRateKHR_reply(struct vn_cs_d
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetFragmentShadingRateKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetFragmentShadingRateKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pFragmentSize */
@@ -12183,7 +12594,10 @@ static inline void vn_decode_vkCmdSetVertexInputEXT_reply(struct vn_cs_decoder *
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetVertexInputEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetVertexInputEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip vertexBindingDescriptionCount */
@@ -12243,7 +12657,10 @@ static inline void vn_decode_vkCmdSetColorWriteEnableEXT_reply(struct vn_cs_deco
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetColorWriteEnableEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetColorWriteEnableEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip attachmentCount */
@@ -12294,7 +12711,10 @@ static inline void vn_decode_vkCmdSetEvent2_reply(struct vn_cs_decoder *dec, VkC
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetEvent2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetEvent2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip event */
@@ -12342,7 +12762,10 @@ static inline void vn_decode_vkCmdResetEvent2_reply(struct vn_cs_decoder *dec, V
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdResetEvent2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdResetEvent2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip event */
@@ -12417,7 +12840,10 @@ static inline void vn_decode_vkCmdWaitEvents2_reply(struct vn_cs_decoder *dec, V
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdWaitEvents2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdWaitEvents2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip eventCount */
@@ -12466,7 +12892,10 @@ static inline void vn_decode_vkCmdPipelineBarrier2_reply(struct vn_cs_decoder *d
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdPipelineBarrier2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdPipelineBarrier2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pDependencyInfo */
@@ -12516,7 +12945,10 @@ static inline void vn_decode_vkCmdWriteTimestamp2_reply(struct vn_cs_decoder *de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdWriteTimestamp2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdWriteTimestamp2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip stage */
@@ -12565,7 +12997,10 @@ static inline void vn_decode_vkCmdBeginRendering_reply(struct vn_cs_decoder *dec
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdBeginRendering_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdBeginRendering_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pRenderingInfo */
@@ -12606,7 +13041,10 @@ static inline void vn_decode_vkCmdEndRendering_reply(struct vn_cs_decoder *dec, 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdEndRendering_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdEndRendering_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
 }
@@ -12652,7 +13090,10 @@ static inline void vn_decode_vkCmdEndRendering2KHR_reply(struct vn_cs_decoder *d
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdEndRendering2KHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdEndRendering2KHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pRenderingEndInfo */
@@ -12699,7 +13140,10 @@ static inline void vn_decode_vkCmdSetDepthBias2EXT_reply(struct vn_cs_decoder *d
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetDepthBias2EXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetDepthBias2EXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pDepthBiasInfo */
@@ -12746,7 +13190,10 @@ static inline void vn_decode_vkCmdBindDescriptorSets2_reply(struct vn_cs_decoder
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdBindDescriptorSets2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdBindDescriptorSets2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pBindDescriptorSetsInfo */
@@ -12793,7 +13240,10 @@ static inline void vn_decode_vkCmdPushConstants2_reply(struct vn_cs_decoder *dec
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdPushConstants2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdPushConstants2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pPushConstantsInfo */
@@ -12840,7 +13290,10 @@ static inline void vn_decode_vkCmdPushDescriptorSet2_reply(struct vn_cs_decoder 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdPushDescriptorSet2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdPushDescriptorSet2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pPushDescriptorSetInfo */
@@ -12887,7 +13340,10 @@ static inline void vn_decode_vkCmdSetRenderingAttachmentLocations_reply(struct v
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetRenderingAttachmentLocations_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetRenderingAttachmentLocations_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pLocationInfo */
@@ -12934,7 +13390,10 @@ static inline void vn_decode_vkCmdSetRenderingInputAttachmentIndices_reply(struc
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetRenderingInputAttachmentIndices_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetRenderingInputAttachmentIndices_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pInputAttachmentIndexInfo */
@@ -12984,7 +13443,10 @@ static inline void vn_decode_vkCmdSetDepthClampRangeEXT_reply(struct vn_cs_decod
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdSetDepthClampRangeEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdSetDepthClampRangeEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip depthClampMode */
@@ -13032,7 +13494,10 @@ static inline void vn_decode_vkCmdBindSamplerHeapEXT_reply(struct vn_cs_decoder 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdBindSamplerHeapEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdBindSamplerHeapEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pBindInfo */
@@ -13079,7 +13544,10 @@ static inline void vn_decode_vkCmdBindResourceHeapEXT_reply(struct vn_cs_decoder
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdBindResourceHeapEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdBindResourceHeapEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pBindInfo */
@@ -13126,7 +13594,10 @@ static inline void vn_decode_vkCmdPushDataEXT_reply(struct vn_cs_decoder *dec, V
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCmdPushDataEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCmdPushDataEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip commandBuffer */
     /* skip pPushDataInfo */

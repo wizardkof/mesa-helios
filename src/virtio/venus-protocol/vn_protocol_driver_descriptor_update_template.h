@@ -173,7 +173,10 @@ static inline VkResult vn_decode_vkCreateDescriptorUpdateTemplate_reply(struct v
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCreateDescriptorUpdateTemplate_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCreateDescriptorUpdateTemplate_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -233,7 +236,10 @@ static inline void vn_decode_vkDestroyDescriptorUpdateTemplate_reply(struct vn_c
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkDestroyDescriptorUpdateTemplate_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkDestroyDescriptorUpdateTemplate_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip descriptorUpdateTemplate */

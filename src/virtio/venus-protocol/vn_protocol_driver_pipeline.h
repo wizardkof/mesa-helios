@@ -3856,7 +3856,10 @@ static inline VkResult vn_decode_vkCreateGraphicsPipelines_reply(struct vn_cs_de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCreateGraphicsPipelines_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCreateGraphicsPipelines_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -3962,7 +3965,10 @@ static inline VkResult vn_decode_vkCreateComputePipelines_reply(struct vn_cs_dec
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCreateComputePipelines_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCreateComputePipelines_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -4027,7 +4033,10 @@ static inline void vn_decode_vkDestroyPipeline_reply(struct vn_cs_decoder *dec, 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkDestroyPipeline_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkDestroyPipeline_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip pipeline */
@@ -4091,7 +4100,10 @@ static inline VkResult vn_decode_vkGetRayTracingShaderGroupHandlesKHR_reply(stru
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetRayTracingShaderGroupHandlesKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetRayTracingShaderGroupHandlesKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -4168,7 +4180,10 @@ static inline VkResult vn_decode_vkGetRayTracingCaptureReplayShaderGroupHandlesK
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetRayTracingCaptureReplayShaderGroupHandlesKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetRayTracingCaptureReplayShaderGroupHandlesKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -4276,7 +4291,10 @@ static inline VkResult vn_decode_vkCreateRayTracingPipelinesKHR_reply(struct vn_
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCreateRayTracingPipelinesKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCreateRayTracingPipelinesKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -4344,7 +4362,10 @@ static inline VkDeviceSize vn_decode_vkGetRayTracingShaderGroupStackSizeKHR_repl
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetRayTracingShaderGroupStackSizeKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetRayTracingShaderGroupStackSizeKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkDeviceSize ret;
     vn_decode_VkDeviceSize(dec, &ret);

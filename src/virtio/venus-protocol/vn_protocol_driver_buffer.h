@@ -699,7 +699,10 @@ static inline void vn_decode_vkGetBufferMemoryRequirements_reply(struct vn_cs_de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetBufferMemoryRequirements_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetBufferMemoryRequirements_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip buffer */
@@ -756,7 +759,10 @@ static inline VkResult vn_decode_vkBindBufferMemory_reply(struct vn_cs_decoder *
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkBindBufferMemory_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkBindBufferMemory_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -825,7 +831,10 @@ static inline VkResult vn_decode_vkCreateBuffer_reply(struct vn_cs_decoder *dec,
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCreateBuffer_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCreateBuffer_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -885,7 +894,10 @@ static inline void vn_decode_vkDestroyBuffer_reply(struct vn_cs_decoder *dec, Vk
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkDestroyBuffer_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkDestroyBuffer_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip buffer */
@@ -947,7 +959,10 @@ static inline VkResult vn_decode_vkBindBufferMemory2_reply(struct vn_cs_decoder 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkBindBufferMemory2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkBindBufferMemory2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -1007,7 +1022,10 @@ static inline void vn_decode_vkGetBufferMemoryRequirements2_reply(struct vn_cs_d
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetBufferMemoryRequirements2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetBufferMemoryRequirements2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip pInfo */
@@ -1067,7 +1085,10 @@ static inline void vn_decode_vkGetDeviceBufferMemoryRequirements_reply(struct vn
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetDeviceBufferMemoryRequirements_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetDeviceBufferMemoryRequirements_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip pInfo */
@@ -1121,7 +1142,10 @@ static inline uint64_t vn_decode_vkGetBufferOpaqueCaptureAddress_reply(struct vn
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetBufferOpaqueCaptureAddress_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetBufferOpaqueCaptureAddress_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     uint64_t ret;
     vn_decode_uint64_t(dec, &ret);
@@ -1174,7 +1198,10 @@ static inline VkDeviceAddress vn_decode_vkGetBufferDeviceAddress_reply(struct vn
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetBufferDeviceAddress_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetBufferDeviceAddress_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkDeviceAddress ret;
     vn_decode_VkDeviceAddress(dec, &ret);

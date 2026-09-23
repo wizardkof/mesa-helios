@@ -313,7 +313,10 @@ static inline VkResult vn_decode_vkAllocateDescriptorSets_reply(struct vn_cs_dec
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkAllocateDescriptorSets_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkAllocateDescriptorSets_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -389,7 +392,10 @@ static inline VkResult vn_decode_vkFreeDescriptorSets_reply(struct vn_cs_decoder
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkFreeDescriptorSets_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkFreeDescriptorSets_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -472,7 +478,10 @@ static inline void vn_decode_vkUpdateDescriptorSets_reply(struct vn_cs_decoder *
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkUpdateDescriptorSets_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkUpdateDescriptorSets_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip descriptorWriteCount */

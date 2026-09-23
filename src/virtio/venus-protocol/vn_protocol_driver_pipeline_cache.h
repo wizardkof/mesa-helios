@@ -135,7 +135,10 @@ static inline VkResult vn_decode_vkCreatePipelineCache_reply(struct vn_cs_decode
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCreatePipelineCache_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCreatePipelineCache_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -195,7 +198,10 @@ static inline void vn_decode_vkDestroyPipelineCache_reply(struct vn_cs_decoder *
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkDestroyPipelineCache_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkDestroyPipelineCache_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip pipelineCache */
@@ -258,7 +264,10 @@ static inline VkResult vn_decode_vkGetPipelineCacheData_reply(struct vn_cs_decod
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetPipelineCacheData_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetPipelineCacheData_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -338,7 +347,10 @@ static inline VkResult vn_decode_vkMergePipelineCaches_reply(struct vn_cs_decode
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkMergePipelineCaches_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkMergePipelineCaches_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);

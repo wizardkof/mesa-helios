@@ -235,7 +235,7 @@ vn_decode_VkAccelerationStructureBuildSizesInfoKHR_pnext(struct vn_cs_decoder *d
 {
     /* no known/supported struct */
     if (vn_decode_simple_pointer(dec))
-        assert(false);
+        vn_cs_decoder_set_fatal(dec);
 }
 
 static inline void
@@ -252,9 +252,15 @@ vn_decode_VkAccelerationStructureBuildSizesInfoKHR(struct vn_cs_decoder *dec, Vk
 {
     VkStructureType stype;
     vn_decode_VkStructureType(dec, &stype);
-    assert(stype == VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR);
+    if (stype != VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
-    assert(val->sType == stype);
+    if (val->sType != stype) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
     vn_decode_VkAccelerationStructureBuildSizesInfoKHR_pnext(dec, val->pNext);
     vn_decode_VkAccelerationStructureBuildSizesInfoKHR_self(dec, val);
 }
@@ -358,7 +364,10 @@ static inline void vn_decode_vkDestroyAccelerationStructureKHR_reply(struct vn_c
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkDestroyAccelerationStructureKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkDestroyAccelerationStructureKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip accelerationStructure */
@@ -411,7 +420,10 @@ static inline VkResult vn_decode_vkCopyAccelerationStructureKHR_reply(struct vn_
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCopyAccelerationStructureKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCopyAccelerationStructureKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -494,7 +506,10 @@ static inline VkResult vn_decode_vkWriteAccelerationStructuresPropertiesKHR_repl
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkWriteAccelerationStructuresPropertiesKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkWriteAccelerationStructuresPropertiesKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -561,7 +576,10 @@ static inline void vn_decode_vkGetDeviceAccelerationStructureCompatibilityKHR_re
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetDeviceAccelerationStructureCompatibilityKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetDeviceAccelerationStructureCompatibilityKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip pVersionInfo */
@@ -629,7 +647,10 @@ static inline VkResult vn_decode_vkCreateAccelerationStructureKHR_reply(struct v
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCreateAccelerationStructureKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCreateAccelerationStructureKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -688,7 +709,10 @@ static inline VkDeviceAddress vn_decode_vkGetAccelerationStructureDeviceAddressK
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetAccelerationStructureDeviceAddressKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetAccelerationStructureDeviceAddressKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkDeviceAddress ret;
     vn_decode_VkDeviceAddress(dec, &ret);
@@ -763,7 +787,10 @@ static inline void vn_decode_vkGetAccelerationStructureBuildSizesKHR_reply(struc
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetAccelerationStructureBuildSizesKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetAccelerationStructureBuildSizesKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip buildType */

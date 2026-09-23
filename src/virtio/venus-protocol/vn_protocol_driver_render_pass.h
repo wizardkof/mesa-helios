@@ -1466,7 +1466,10 @@ static inline VkResult vn_decode_vkCreateRenderPass_reply(struct vn_cs_decoder *
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCreateRenderPass_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCreateRenderPass_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -1526,7 +1529,10 @@ static inline void vn_decode_vkDestroyRenderPass_reply(struct vn_cs_decoder *dec
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkDestroyRenderPass_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkDestroyRenderPass_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip renderPass */
@@ -1579,7 +1585,10 @@ static inline void vn_decode_vkGetRenderAreaGranularity_reply(struct vn_cs_decod
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetRenderAreaGranularity_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetRenderAreaGranularity_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip renderPass */
@@ -1639,7 +1648,10 @@ static inline void vn_decode_vkGetRenderingAreaGranularity_reply(struct vn_cs_de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetRenderingAreaGranularity_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetRenderingAreaGranularity_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip pRenderingAreaInfo */
@@ -1707,7 +1719,10 @@ static inline VkResult vn_decode_vkCreateRenderPass2_reply(struct vn_cs_decoder 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCreateRenderPass2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCreateRenderPass2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);

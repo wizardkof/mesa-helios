@@ -166,7 +166,10 @@ static inline VkResult vn_decode_vkCreateBufferView_reply(struct vn_cs_decoder *
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCreateBufferView_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCreateBufferView_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -226,7 +229,10 @@ static inline void vn_decode_vkDestroyBufferView_reply(struct vn_cs_decoder *dec
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkDestroyBufferView_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkDestroyBufferView_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip bufferView */

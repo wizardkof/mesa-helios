@@ -326,7 +326,10 @@ static inline VkResult vn_decode_vkCreateDeferredOperationKHR_reply(struct vn_cs
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCreateDeferredOperationKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCreateDeferredOperationKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -385,7 +388,10 @@ static inline void vn_decode_vkDestroyDeferredOperationKHR_reply(struct vn_cs_de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkDestroyDeferredOperationKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkDestroyDeferredOperationKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip operation */
@@ -432,7 +438,10 @@ static inline uint32_t vn_decode_vkGetDeferredOperationMaxConcurrencyKHR_reply(s
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetDeferredOperationMaxConcurrencyKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetDeferredOperationMaxConcurrencyKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     uint32_t ret;
     vn_decode_uint32_t(dec, &ret);
@@ -482,7 +491,10 @@ static inline VkResult vn_decode_vkGetDeferredOperationResultKHR_reply(struct vn
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetDeferredOperationResultKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetDeferredOperationResultKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -532,7 +544,10 @@ static inline VkResult vn_decode_vkDeferredOperationJoinKHR_reply(struct vn_cs_d
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkDeferredOperationJoinKHR_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkDeferredOperationJoinKHR_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -580,7 +595,10 @@ static inline void vn_decode_vkSetReplyCommandStreamMESA_reply(struct vn_cs_deco
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkSetReplyCommandStreamMESA_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkSetReplyCommandStreamMESA_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip pStream */
 }
@@ -620,7 +638,10 @@ static inline void vn_decode_vkSeekReplyCommandStreamMESA_reply(struct vn_cs_dec
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkSeekReplyCommandStreamMESA_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkSeekReplyCommandStreamMESA_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip position */
 }
@@ -709,7 +730,10 @@ static inline void vn_decode_vkExecuteCommandStreamsMESA_reply(struct vn_cs_deco
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkExecuteCommandStreamsMESA_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkExecuteCommandStreamsMESA_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip streamCount */
     /* skip pStreams */
@@ -760,7 +784,10 @@ static inline void vn_decode_vkCreateRingMESA_reply(struct vn_cs_decoder *dec, u
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCreateRingMESA_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCreateRingMESA_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip ring */
     /* skip pCreateInfo */
@@ -801,7 +828,10 @@ static inline void vn_decode_vkDestroyRingMESA_reply(struct vn_cs_decoder *dec, 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkDestroyRingMESA_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkDestroyRingMESA_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip ring */
 }
@@ -847,7 +877,10 @@ static inline void vn_decode_vkNotifyRingMESA_reply(struct vn_cs_decoder *dec, u
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkNotifyRingMESA_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkNotifyRingMESA_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip ring */
     /* skip seqno */
@@ -895,7 +928,10 @@ static inline void vn_decode_vkWriteRingExtraMESA_reply(struct vn_cs_decoder *de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkWriteRingExtraMESA_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkWriteRingExtraMESA_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip ring */
     /* skip offset */
@@ -940,7 +976,10 @@ static inline void vn_decode_vkSubmitVirtqueueSeqnoMESA_reply(struct vn_cs_decod
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkSubmitVirtqueueSeqnoMESA_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkSubmitVirtqueueSeqnoMESA_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip ring */
     /* skip seqno */
@@ -981,7 +1020,10 @@ static inline void vn_decode_vkWaitVirtqueueSeqnoMESA_reply(struct vn_cs_decoder
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkWaitVirtqueueSeqnoMESA_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkWaitVirtqueueSeqnoMESA_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip seqno */
 }
@@ -1024,7 +1066,10 @@ static inline void vn_decode_vkWaitRingSeqnoMESA_reply(struct vn_cs_decoder *dec
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkWaitRingSeqnoMESA_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkWaitRingSeqnoMESA_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip ring */
     /* skip seqno */

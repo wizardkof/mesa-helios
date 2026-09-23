@@ -1056,7 +1056,10 @@ static inline VkResult vn_decode_vkQueueSubmit_reply(struct vn_cs_decoder *dec, 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkQueueSubmit_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkQueueSubmit_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -1105,7 +1108,10 @@ static inline VkResult vn_decode_vkQueueWaitIdle_reply(struct vn_cs_decoder *dec
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkQueueWaitIdle_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkQueueWaitIdle_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -1172,7 +1178,10 @@ static inline VkResult vn_decode_vkQueueBindSparse_reply(struct vn_cs_decoder *d
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkQueueBindSparse_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkQueueBindSparse_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -1242,7 +1251,10 @@ static inline VkResult vn_decode_vkQueueSubmit2_reply(struct vn_cs_decoder *dec,
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkQueueSubmit2_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkQueueSubmit2_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);

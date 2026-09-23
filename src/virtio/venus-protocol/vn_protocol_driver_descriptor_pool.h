@@ -263,7 +263,10 @@ static inline VkResult vn_decode_vkCreateDescriptorPool_reply(struct vn_cs_decod
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCreateDescriptorPool_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCreateDescriptorPool_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -323,7 +326,10 @@ static inline void vn_decode_vkDestroyDescriptorPool_reply(struct vn_cs_decoder 
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkDestroyDescriptorPool_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkDestroyDescriptorPool_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip descriptorPool */
@@ -373,7 +379,10 @@ static inline VkResult vn_decode_vkResetDescriptorPool_reply(struct vn_cs_decode
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkResetDescriptorPool_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkResetDescriptorPool_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);

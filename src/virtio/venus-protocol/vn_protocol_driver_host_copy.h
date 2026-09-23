@@ -412,7 +412,10 @@ static inline VkResult vn_decode_vkCopyImageToImage_reply(struct vn_cs_decoder *
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCopyImageToImage_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCopyImageToImage_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -477,7 +480,10 @@ static inline VkResult vn_decode_vkTransitionImageLayout_reply(struct vn_cs_deco
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkTransitionImageLayout_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkTransitionImageLayout_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -542,7 +548,10 @@ static inline VkResult vn_decode_vkCopyImageToMemoryMESA_reply(struct vn_cs_deco
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCopyImageToMemoryMESA_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCopyImageToMemoryMESA_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -603,7 +612,10 @@ static inline VkResult vn_decode_vkCopyMemoryToImageMESA_reply(struct vn_cs_deco
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCopyMemoryToImageMESA_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCopyMemoryToImageMESA_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);

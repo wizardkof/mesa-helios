@@ -478,7 +478,10 @@ static inline VkResult vn_decode_vkRegisterCustomBorderColorEXT_reply(struct vn_
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkRegisterCustomBorderColorEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkRegisterCustomBorderColorEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -532,7 +535,10 @@ static inline void vn_decode_vkUnregisterCustomBorderColorEXT_reply(struct vn_cs
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkUnregisterCustomBorderColorEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkUnregisterCustomBorderColorEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip index */
@@ -614,7 +620,10 @@ static inline VkResult vn_decode_vkGetImageOpaqueCaptureDataEXT_reply(struct vn_
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetImageOpaqueCaptureDataEXT_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetImageOpaqueCaptureDataEXT_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -687,7 +696,10 @@ static inline VkResult vn_decode_vkWriteSamplerDescriptorMESA_reply(struct vn_cs
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkWriteSamplerDescriptorMESA_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkWriteSamplerDescriptorMESA_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -759,7 +771,10 @@ static inline VkResult vn_decode_vkWriteResourceDescriptorMESA_reply(struct vn_c
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkWriteResourceDescriptorMESA_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkWriteResourceDescriptorMESA_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);

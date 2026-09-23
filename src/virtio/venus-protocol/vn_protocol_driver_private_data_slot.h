@@ -121,7 +121,10 @@ static inline VkResult vn_decode_vkCreatePrivateDataSlot_reply(struct vn_cs_deco
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCreatePrivateDataSlot_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCreatePrivateDataSlot_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -181,7 +184,10 @@ static inline void vn_decode_vkDestroyPrivateDataSlot_reply(struct vn_cs_decoder
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkDestroyPrivateDataSlot_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkDestroyPrivateDataSlot_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip privateDataSlot */
@@ -237,7 +243,10 @@ static inline VkResult vn_decode_vkSetPrivateData_reply(struct vn_cs_decoder *de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkSetPrivateData_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkSetPrivateData_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -299,7 +308,10 @@ static inline void vn_decode_vkGetPrivateData_reply(struct vn_cs_decoder *dec, V
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetPrivateData_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetPrivateData_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip objectType */

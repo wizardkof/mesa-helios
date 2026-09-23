@@ -417,7 +417,10 @@ static inline VkResult vn_decode_vkCreateSemaphore_reply(struct vn_cs_decoder *d
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkCreateSemaphore_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkCreateSemaphore_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -477,7 +480,10 @@ static inline void vn_decode_vkDestroySemaphore_reply(struct vn_cs_decoder *dec,
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkDestroySemaphore_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkDestroySemaphore_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip semaphore */
@@ -529,7 +535,10 @@ static inline VkResult vn_decode_vkGetSemaphoreCounterValue_reply(struct vn_cs_d
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkGetSemaphoreCounterValue_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkGetSemaphoreCounterValue_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -590,7 +599,10 @@ static inline VkResult vn_decode_vkWaitSemaphores_reply(struct vn_cs_decoder *de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkWaitSemaphores_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkWaitSemaphores_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -644,7 +656,10 @@ static inline VkResult vn_decode_vkSignalSemaphore_reply(struct vn_cs_decoder *d
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkSignalSemaphore_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkSignalSemaphore_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return 0;
+    }
 
     VkResult ret;
     vn_decode_VkResult(dec, &ret);
@@ -692,7 +707,10 @@ static inline void vn_decode_vkWaitSemaphoreResourceMESA_reply(struct vn_cs_deco
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkWaitSemaphoreResourceMESA_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkWaitSemaphoreResourceMESA_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip semaphore */
@@ -739,7 +757,10 @@ static inline void vn_decode_vkImportSemaphoreResourceMESA_reply(struct vn_cs_de
 {
     VkCommandTypeEXT command_type;
     vn_decode_VkCommandTypeEXT(dec, &command_type);
-    assert(command_type == VK_COMMAND_TYPE_vkImportSemaphoreResourceMESA_EXT);
+    if (command_type != VK_COMMAND_TYPE_vkImportSemaphoreResourceMESA_EXT) {
+        vn_cs_decoder_set_fatal(dec);
+        return;
+    }
 
     /* skip device */
     /* skip pImportSemaphoreResourceInfo */
