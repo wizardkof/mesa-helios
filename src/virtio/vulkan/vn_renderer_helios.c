@@ -2634,7 +2634,6 @@ helios_event_wait_fence(struct helios *helios, uint64_t fence_id, uint64_t timeo
       timeout_ns < HELIOS_EVENT_WAIT_MAX_NS ? timeout_ns : HELIOS_EVENT_WAIT_MAX_NS;
    const DWORD wait_ms = helios_timeout_ns_to_ms(bounded_ns);
    LARGE_INTEGER wait_begin = { 0 }, wait_end = { 0 };
-   const bool diag_enabled = helios_p06_diag_enabled();
    if (diag_enabled) {
       QueryPerformanceCounter(&wait_begin);
       helios_p06_diag(helios, "EVENT_WAIT_BEGIN", fence_id, "wait_started=1");
