@@ -74,6 +74,9 @@
 #ifndef _NTDEF_
 typedef LONG NTSTATUS, *PNTSTATUS;
 #endif
+#ifndef NT_SUCCESS
+#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
+#endif
 #include <d3dkmthk.h>
 
 struct _OBJECT_ATTRIBUTES {
@@ -1428,12 +1431,13 @@ helios_escape_no_adapter_sync_enabled(void)
    return enabled > 0;
 }
 
-static bool
-helios_escape_ex(struct helios *helios, void *buf, uint32_t size, bool hardware_access)
+static NTSTATUS
+helios_escape_ex_status(struct helios *helios, void *buf, uint32_t size,
+                        bool hardware_access)
 {
    if (!helios->adapter) {
       helios_diag("escape skipped: no adapter size=%u", size);
-      return false;
+      return (NTSTATUS)0xC0000008L; /* STATUS_INVALID_HANDLE */
    }
 
    D3DKMT_ESCAPE esc;
@@ -1460,9 +1464,71 @@ helios_escape_ex(struct helios *helios, void *buf, uint32_t size, bool hardware_
                   (unsigned)helios->device, size);
       fprintf(stderr, "HELIOS[gate5a]: D3DKMTEscape status=0x%08x (adapter=0x%x device=0x%x size=%u)\n",
               (unsigned)st, (unsigned)helios->adapter, (unsigned)helios->device, size);
-      return false;
+      return st;
    }
-   return true;
+   return st;
+}
+
+static bool
+helios_escape_ex(struct helios *helios, void *buf, uint32_t size, bool hardware_access)
+{
+   return helios_escape_ex_status(helios, buf, size, hardware_access) == 0;
+}
+
+/* P06 causal trace is process-local, opt-in, and has no effect on waits or
+ * escape results when disabled. One WriteFile per line keeps records intact. */
+static bool
+helios_p06_diag_enabled(void)
+{
+   static volatile LONG cached = -1;
+   LONG value = InterlockedCompareExchange(&cached, -1, -1);
+   if (value < 0) {
+      char env[8] = { 0 };
+      const LONG enabled = GetEnvironmentVariableA("HELIOS_P06_DIAG", env,
+                                                    sizeof(env)) &&
+                           env[0] == '1' && env[1] == '\0';
+      InterlockedCompareExchange(&cached, enabled, -1);
+      value = InterlockedCompareExchange(&cached, -1, -1);
+   }
+   return value == 1;
+}
+
+static void
+helios_p06_diag(struct helios *helios, const char *event, uint64_t fence_id,
+                const char *fields)
+{
+   if (!helios_p06_diag_enabled())
+      return;
+   char path[MAX_PATH];
+   DWORD n = GetEnvironmentVariableA("HELIOS_P06_DIAG_FILE", path,
+                                     sizeof(path));
+   if (!n || n >= sizeof(path)) {
+      CreateDirectoryA("C:\\ProgramData\\Helios", NULL);
+      strcpy(path, "C:\\ProgramData\\Helios\\helios_p06_diag.log");
+   }
+   HANDLE file = CreateFileA(path, FILE_APPEND_DATA,
+                             FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+                             OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+   if (file == INVALID_HANDLE_VALUE)
+      return;
+   FILETIME ft;
+   LARGE_INTEGER qpc;
+   GetSystemTimePreciseAsFileTime(&ft);
+   QueryPerformanceCounter(&qpc);
+   const uint64_t filetime = ((uint64_t)ft.dwHighDateTime << 32) | ft.dwLowDateTime;
+   char line[1024];
+   const int len = snprintf(line, sizeof(line),
+      "utc_filetime=%llu qpc=%lld pid=%lu tid=%lu ctx_id=%u luid=%08x:%08x event=%s fence=%llu %s\r\n",
+      (unsigned long long)filetime, (long long)qpc.QuadPart,
+      (unsigned long)GetCurrentProcessId(), (unsigned long)GetCurrentThreadId(),
+      helios->ctx_id, (unsigned)helios->adapter_luid.HighPart,
+      (unsigned)helios->adapter_luid.LowPart, event,
+      (unsigned long long)fence_id, fields ? fields : "");
+   if (len > 0 && (size_t)len < sizeof(line)) {
+      DWORD written;
+      WriteFile(file, line, (DWORD)len, &written, NULL);
+   }
+   CloseHandle(file);
 }
 
 /* HardwareAccess for the default escape wrapper — now 0 (26th session).
@@ -1856,6 +1922,15 @@ helios_ioctl_submit_cs(struct helios *helios,
    uint8_t *buf = helios->submit_buf;
    memcpy(buf, &hdr, sizeof(hdr));
    memcpy(buf + sizeof(hdr), cs_data, cs_size);
+   const bool diag_enabled = helios_p06_diag_enabled();
+   char diag_fields[256];
+   if (diag_enabled) {
+      snprintf(diag_fields, sizeof(diag_fields),
+               "local_fence_id=%llu input_hdr_fence_id=%llu ring_idx=%u present_cookie=%llu present_value32=%u",
+               (unsigned long long)local_fence_id, (unsigned long long)hdr.fence_id,
+               ring_idx, (unsigned long long)present_cookie, present_value32);
+      helios_p06_diag(helios, "SUBMIT_PRE", hdr.fence_id, diag_fields);
+   }
    const bool ok = helios_escape(helios, buf, (uint32_t)total);
    uint64_t wire_fence_id = local_fence_id;
    if (ok) {
@@ -1867,6 +1942,13 @@ helios_ioctl_submit_cs(struct helios *helios,
    }
    if (ok && out_fence_id)
       *out_fence_id = wire_fence_id;
+   if (diag_enabled) {
+      snprintf(diag_fields, sizeof(diag_fields),
+               "escape_result=%u local_fence_id=%llu input_hdr_fence_id=%llu assigned_wire_fence_id=%llu ring_idx=%u",
+               ok, (unsigned long long)local_fence_id, (unsigned long long)hdr.fence_id,
+               (unsigned long long)wire_fence_id, ring_idx);
+      helios_p06_diag(helios, "SUBMIT_POST", wire_fence_id, diag_fields);
+   }
    return ok;
 }
 
@@ -2359,7 +2441,19 @@ helios_wait_fence_blocking(struct helios *helios, uint64_t fence_id, uint64_t ti
    req.fence_id = fence_id;
    req.timeout_ns = timeout_ns;
    req.out_completed = 1;
-   if (!helios_escape_ex(helios, &req, sizeof(req), false))
+   const NTSTATUS escape_status =
+      helios_escape_ex_status(helios, &req, sizeof(req), false);
+   const bool escape_ok = escape_status == 0;
+   if (helios_p06_diag_enabled()) {
+      char fields[224];
+      snprintf(fields, sizeof(fields),
+               "timeout_ns=%llu out_completed=%u out_response_type=%u escape_ntstatus=0x%08x nt_success=%u",
+               (unsigned long long)timeout_ns, req.out_completed,
+               req.out_response_type, (unsigned)escape_status,
+               NT_SUCCESS(escape_status));
+      helios_p06_diag(helios, "BLOCKING_WAIT_RESULT", fence_id, fields);
+   }
+   if (!escape_ok)
       return (struct helios_wire_result) { HELIOS_WIRE_PENDING, 0 };
    if (req.out_completed == 2)
       return (struct helios_wire_result) { HELIOS_WIRE_ERROR, req.out_response_type };
@@ -2425,14 +2519,18 @@ helios_escape_fence_event(struct helios *helios,
                           uint32_t cmd_type,
                           uint64_t fence_id,
                           HANDLE event,
-                          uint32_t *response_type)
+                          uint32_t *response_type,
+                          NTSTATUS *escape_status)
 {
    struct helios_escape_fence_event req = { 0 };
    helios_hdr_init(&req.hdr, cmd_type, sizeof(req));
    req.fence_id = fence_id;
    req.event_handle = (uint64_t)(uintptr_t)event;
    req.out_state = HELIOS_FENCE_EVENT_ESCAPE_FAILED;
-   if (!helios_escape_ex(helios, &req, sizeof(req), false))
+   const NTSTATUS status = helios_escape_ex_status(helios, &req, sizeof(req), false);
+   if (escape_status)
+      *escape_status = status;
+   if (status != 0)
       return HELIOS_FENCE_EVENT_ESCAPE_FAILED;
    if (response_type)
       *response_type = req.out_response_type;
@@ -2447,8 +2545,23 @@ static struct helios_wire_result
 helios_fence_event_cancel(struct helios *helios, uint64_t fence_id, HANDLE ev)
 {
    uint32_t response_type = 0;
+   NTSTATUS escape_status = (NTSTATUS)0xC0000008L;
+   LARGE_INTEGER escape_begin = { 0 }, escape_end = { 0 };
+   const bool diag_enabled = helios_p06_diag_enabled();
+   if (diag_enabled)
+      QueryPerformanceCounter(&escape_begin);
    const uint32_t un = helios_escape_fence_event(
-      helios, HELIOS_ESCAPE_UNREGISTER_FENCE_EVENT, fence_id, ev, &response_type);
+      helios, HELIOS_ESCAPE_UNREGISTER_FENCE_EVENT, fence_id, ev, &response_type,
+      &escape_status);
+   if (diag_enabled) {
+      QueryPerformanceCounter(&escape_end);
+      char fields[224];
+      snprintf(fields, sizeof(fields),
+               "wire_state=%u response_type=%u escape_ntstatus=0x%08x nt_success=%u escape_qpc_elapsed=%lld",
+               un, response_type, (unsigned)escape_status, NT_SUCCESS(escape_status),
+               (long long)(escape_end.QuadPart - escape_begin.QuadPart));
+      helios_p06_diag(helios, "EVENT_CANCEL_RESULT", fence_id, fields);
+   }
    if (un == HELIOS_FENCE_EVENT_TERMINAL_ERROR)
       return (struct helios_wire_result) { HELIOS_WIRE_ERROR, response_type };
    if (un == HELIOS_FENCE_EVENT_CANCELLED)
@@ -2487,8 +2600,23 @@ helios_event_wait_fence(struct helios *helios, uint64_t fence_id, uint64_t timeo
    }
 
    uint32_t response_type = 0;
+   NTSTATUS escape_status = (NTSTATUS)0xC0000008L;
+   LARGE_INTEGER reg_begin = { 0 }, reg_end = { 0 };
+   const bool diag_enabled = helios_p06_diag_enabled();
+   if (diag_enabled)
+      QueryPerformanceCounter(&reg_begin);
    const uint32_t state = helios_escape_fence_event(
-      helios, HELIOS_ESCAPE_REGISTER_FENCE_EVENT, fence_id, ev, &response_type);
+      helios, HELIOS_ESCAPE_REGISTER_FENCE_EVENT, fence_id, ev, &response_type,
+      &escape_status);
+   if (diag_enabled) {
+      QueryPerformanceCounter(&reg_end);
+      char reg_fields[224];
+      snprintf(reg_fields, sizeof(reg_fields),
+               "state=%u response_type=%u escape_ntstatus=0x%08x nt_success=%u escape_qpc_elapsed=%lld",
+               state, response_type, (unsigned)escape_status, NT_SUCCESS(escape_status),
+               (long long)(reg_end.QuadPart - reg_begin.QuadPart));
+      helios_p06_diag(helios, "EVENT_REGISTER_RESULT", fence_id, reg_fields);
+   }
    if (state == HELIOS_FENCE_EVENT_TERMINAL_ERROR)
       return (struct helios_wire_result) { HELIOS_WIRE_ERROR, response_type };
    if (state == HELIOS_FENCE_EVENT_ALREADY_COMPLETE) {
@@ -2504,8 +2632,23 @@ helios_event_wait_fence(struct helios *helios, uint64_t fence_id, uint64_t timeo
    InterlockedIncrement(&helios_fence_event_waits);
    const uint64_t bounded_ns =
       timeout_ns < HELIOS_EVENT_WAIT_MAX_NS ? timeout_ns : HELIOS_EVENT_WAIT_MAX_NS;
-   if (WaitForSingleObject(ev, helios_timeout_ns_to_ms(bounded_ns)) ==
-       WAIT_OBJECT_0)
+   const DWORD wait_ms = helios_timeout_ns_to_ms(bounded_ns);
+   LARGE_INTEGER wait_begin = { 0 }, wait_end = { 0 };
+   const bool diag_enabled = helios_p06_diag_enabled();
+   if (diag_enabled) {
+      QueryPerformanceCounter(&wait_begin);
+      helios_p06_diag(helios, "EVENT_WAIT_BEGIN", fence_id, "wait_started=1");
+   }
+   const DWORD wait_result = WaitForSingleObject(ev, wait_ms);
+   if (diag_enabled) {
+      QueryPerformanceCounter(&wait_end);
+      char wait_fields[192];
+      snprintf(wait_fields, sizeof(wait_fields), "wait_result=%lu elapsed_qpc=%lld",
+               (unsigned long)wait_result,
+               (long long)(wait_end.QuadPart - wait_begin.QuadPart));
+      helios_p06_diag(helios, "EVENT_WAIT_END", fence_id, wait_fields);
+   }
+   if (wait_result == WAIT_OBJECT_0)
       return helios_fence_event_cancel(helios, fence_id, ev);
 
    struct helios_wire_result result = helios_fence_event_cancel(helios, fence_id, ev);
@@ -2521,7 +2664,15 @@ helios_event_wait_fence(struct helios *helios, uint64_t fence_id, uint64_t timeo
 static struct helios_wire_result
 helios_ioctl_wait_fence(struct helios *helios, uint64_t fence_id, uint64_t timeout_ns)
 {
-   if (!helios->fence_events_supported || timeout_ns == 0)
+   const bool blocking = !helios->fence_events_supported || timeout_ns == 0;
+   if (helios_p06_diag_enabled()) {
+      char fields[128];
+      snprintf(fields, sizeof(fields), "timeout_ns=%llu fence_events_supported=%u path=%s",
+               (unsigned long long)timeout_ns, helios->fence_events_supported,
+               blocking ? "BLOCKING_ESCAPE" : "EVENT");
+      helios_p06_diag(helios, "WAIT_DISPATCH", fence_id, fields);
+   }
+   if (blocking)
       return helios_wait_fence_blocking(helios, fence_id, timeout_ns);
    return helios_event_wait_fence(helios, fence_id, timeout_ns);
 }
@@ -2621,6 +2772,7 @@ helios_sync_append_locked(struct vn_renderer *renderer,
                           uint64_t val,
                           uint64_t fence_id)
 {
+   struct helios *helios = (struct helios *)renderer;
    if (!fence_id) {
       /* No wire fence to order on (a sync-only batch). With nothing pending the
        * value advances immediately. With signal ops still in flight it must
@@ -2655,6 +2807,12 @@ helios_sync_append_locked(struct vn_renderer *renderer,
       .fence_id = fence_id,
       .complete = false,
    };
+   if (fence_id && helios_p06_diag_enabled()) {
+      char fields[160];
+      snprintf(fields, sizeof(fields), "sync=%p timeline_value=%llu",
+               (void *)sync, (unsigned long long)val);
+      helios_p06_diag(helios, "PENDING_APPEND", fence_id, fields);
+   }
    return true;
 }
 
@@ -2711,7 +2869,7 @@ helios_retire_event_wait(struct helios *helios, uint64_t fence_id,
    }
 
    const uint32_t state = helios_escape_fence_event(
-      helios, HELIOS_ESCAPE_REGISTER_FENCE_EVENT, fence_id, ev, response_type);
+      helios, HELIOS_ESCAPE_REGISTER_FENCE_EVENT, fence_id, ev, response_type, NULL);
    if (state == HELIOS_FENCE_EVENT_TERMINAL_ERROR)
       return HELIOS_RETIRE_WAIT_ERROR;
    if (state == HELIOS_FENCE_EVENT_ALREADY_COMPLETE) {
@@ -4128,7 +4286,16 @@ helios_wait(struct vn_renderer *renderer, const struct vn_renderer_wait *wait)
              wait_fence_count < wait_fence_capacity &&
             !helios_wait_fence_list_contains(wait_fences, wait_fence_count,
                                               pending->fence_id))
+         {
             wait_fences[wait_fence_count++] = pending->fence_id;
+            if (helios_p06_diag_enabled()) {
+               char fields[192];
+               snprintf(fields, sizeof(fields), "sync_value=%llu timeout_ns=%llu wait_any=%u",
+                        (unsigned long long)wait->sync_values[i],
+                        (unsigned long long)wait->timeout, wait->wait_any);
+               helios_p06_diag(helios, "WAIT_SELECTED", pending->fence_id, fields);
+            }
+         }
       }
    }
    mtx_unlock(&helios->dev_mutex);
