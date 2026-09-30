@@ -5559,6 +5559,57 @@ vn_renderer_helios_sync_create_from_win32_name(struct vn_renderer *renderer,
    return VK_SUCCESS;
 }
 
+/* Open only the KMD-owned native name bound to this carrier ID. FILE_MAP_READ
+ * does not grant SECTION_QUERY: public exports must retain both native rights
+ * for the importer's UserMode ATTEST_HANDLE check (P06 A/B/A-prime, 2026-09-30).
+ * Reuse the backend's user-mode NT ABI, including NTAPI on 32-bit Windows. */
+static HANDLE
+helios_carrier_open_reader(const uint16_t name[128], const uint8_t id[16])
+{
+   static const WCHAR prefix[] = L"\\BaseNamedObjects\\HeliosP06Carrier_";
+   static const WCHAR digits[] = L"0123456789abcdef";
+   const size_t prefix_len = ARRAY_SIZE(prefix) - 1;
+   const size_t name_len = prefix_len + 32;
+   _Static_assert(sizeof(WCHAR) == sizeof(uint16_t), "native UTF-16 ABI");
+   _Static_assert(sizeof(struct _OBJECT_ATTRIBUTES) ==
+                     (sizeof(void *) == 8 ? 48 : 24), "native object ABI");
+   _Static_assert(sizeof(struct helios_unicode_string) ==
+                     (sizeof(void *) == 8 ? 16 : 8), "native string ABI");
+   if (name_len >= 128 || name[name_len] != 0)
+      return NULL;
+   for (size_t i = 0; i < prefix_len; i++) {
+      if (name[i] != prefix[i])
+         return NULL;
+   }
+   for (size_t i = 0; i < 16; i++) {
+      if (name[prefix_len + 2 * i] != digits[id[i] >> 4] ||
+          name[prefix_len + 2 * i + 1] != digits[id[i] & 15])
+         return NULL;
+   }
+
+   HMODULE ntdll = GetModuleHandleW(L"ntdll.dll");
+   if (!ntdll)
+      return NULL;
+   typedef NTSTATUS (NTAPI *open_section_fn)(HANDLE *, ACCESS_MASK,
+                                            struct _OBJECT_ATTRIBUTES *);
+   open_section_fn open_section =
+      (open_section_fn)GetProcAddress(ntdll, "NtOpenSection");
+   if (!open_section)
+      return NULL;
+   struct helios_unicode_string native_name = {
+      .Length = (USHORT)(name_len * sizeof(WCHAR)),
+      .MaximumLength = (USHORT)((name_len + 1) * sizeof(WCHAR)),
+      .Buffer = (WCHAR *)name,
+   };
+   struct _OBJECT_ATTRIBUTES attr = { 0 };
+   attr.Length = sizeof(attr);
+   attr.ObjectName = &native_name;
+   HANDLE handle = NULL;
+   const NTSTATUS status =
+      open_section(&handle, SECTION_MAP_READ | SECTION_QUERY, &attr);
+   return NT_SUCCESS(status) ? handle : NULL;
+}
+
 static VkResult
 helios_carrier_create_producer(struct vn_renderer *renderer,
                                struct helios_sync *sync)
@@ -5584,8 +5635,8 @@ helios_carrier_create_producer(struct vn_renderer *renderer,
        !helios_carrier_win32_name_valid(request.object_name, request.carrier_id))
       goto fail;
 
-   sync->carrier_handle_owned = OpenFileMappingW(
-      FILE_MAP_READ, FALSE, (const WCHAR *)request.object_name);
+   sync->carrier_handle_owned =
+      helios_carrier_open_reader(request.native_name, request.carrier_id);
    if (!sync->carrier_handle_owned)
       goto fail;
    sync->carrier_view_readonly = MapViewOfFile(
