@@ -46,6 +46,7 @@
 
 #include "vn_renderer_internal.h"
 #include "vn_renderer_helios_wait_result.h"
+#include "vn_renderer_helios_carrier_v2.h"
 #include "vn_device.h"
 #include "vn_device_memory.h"
 #include "vn_instance.h" /* helios_venus_instance_ctx_id (instance-scoped export) */
@@ -126,6 +127,15 @@ struct helios_unicode_string {
 #define HELIOS_ESCAPE_QUERY_SCANOUT           0x000Du
 #define HELIOS_ESCAPE_PRESENT_STREAM           0x0010u
 #define HELIOS_ESCAPE_PRESENT_BUFFER_READ      0x0012u
+#define HELIOS_ESCAPE_P06_PRODUCTION_CARRIER    0x0018u
+#define HELIOS_P06_PRODUCTION_CREATE            1u
+#define HELIOS_P06_PRODUCTION_PUBLISH_SUCCESS   2u
+#define HELIOS_P06_PRODUCTION_PUBLISH_ERROR     3u
+#define HELIOS_P06_PRODUCTION_RELEASE           5u
+#define HELIOS_P06_PRODUCTION_QUERY             6u
+#define HELIOS_P06_PRODUCTION_ATTEST_HANDLE     9u
+#define HELIOS_P06_ATTEST_SUCCESS               0u
+#define HELIOS_P06_SECTION_LEASE_KERNEL_HANDLE_RETAINED 1u
 
 #define HELIOS_PRESENT_STREAM_OP_REGISTER   1u
 #define HELIOS_PRESENT_STREAM_OP_UNREGISTER 2u
@@ -174,6 +184,41 @@ struct helios_escape_header {
    uint32_t version;  /* == HELIOS_ESCAPE_VERSION */
    uint32_t size;     /* total escape buffer size in bytes */
 };
+
+/* Exact repr(C) mirror of HeliosEscapeP06ProductionCarrier at
+ * 42d7e7341a8b2390d9a27695664693caffb8ca2b. */
+struct helios_escape_p06_production_carrier {
+   struct helios_escape_header hdr;
+   uint32_t op;
+   uint32_t reserved_op;
+   uint8_t carrier_id[16];
+   uint64_t generation;
+   uint32_t slot_index;
+   uint32_t lease_flags;
+   uint64_t value;
+   uint32_t response_type;
+   uint32_t status;
+   uint32_t expected_record_version;
+   uint32_t reserved;
+   uint64_t user_handle;
+   uint16_t object_name[128];
+   uint16_t native_name[128];
+};
+
+_Static_assert(sizeof(struct helios_escape_p06_production_carrier) == 600,
+               "production escape size");
+_Static_assert(offsetof(struct helios_escape_p06_production_carrier, carrier_id) == 24,
+               "production identity offset");
+_Static_assert(offsetof(struct helios_escape_p06_production_carrier, generation) == 40,
+               "production generation offset");
+_Static_assert(offsetof(struct helios_escape_p06_production_carrier, value) == 56,
+               "production value offset");
+_Static_assert(offsetof(struct helios_escape_p06_production_carrier, user_handle) == 80,
+               "production caller handle offset");
+_Static_assert(offsetof(struct helios_escape_p06_production_carrier, object_name) == 88,
+               "production Win32 name offset");
+_Static_assert(offsetof(struct helios_escape_p06_production_carrier, native_name) == 344,
+               "production native name offset");
 
 struct helios_escape_ctx_create {
    struct helios_escape_header hdr;
@@ -423,8 +468,15 @@ struct helios_sync_pending {
    uint32_t error_response_type;
 };
 
+enum helios_sync_backing {
+   HELIOS_SYNC_BACKING_NONE,
+   HELIOS_SYNC_BACKING_WDDM,
+   HELIOS_SYNC_BACKING_E1_V2,
+};
+
 struct helios_sync {
    struct vn_renderer_sync base;
+   enum helios_sync_backing backing;
    /* Last value known to have retired on the host. Pending target values are kept
     * ordered so a later out-of-order fence cannot make an older frame appear
     * complete. */
@@ -438,6 +490,12 @@ struct helios_sync {
     * with VkExportSemaphoreWin32HandleInfoKHR::name). Held open so the name
     * stays resolvable for consumers; closed on final unref. */
    void *nt_named_handle;
+   HANDLE carrier_handle_owned;
+   const volatile struct helios_carrier_v2_record *carrier_view_readonly;
+   uint8_t carrier_id[16];
+   uint32_t carrier_slot;
+   uint64_t carrier_generation;
+   bool carrier_lease_live;
    /* Reference count under dev_mutex: 1 for the vn_renderer_sync owner, +1 per
     * queued retire-thread entry. The WDDM handles close and the struct frees on
     * the LAST unref (a queued retire entry may legally outlive ops.destroy). */
@@ -1515,6 +1573,63 @@ static bool
 helios_escape_ex(struct helios *helios, void *buf, uint32_t size, bool hardware_access)
 {
    return helios_escape_ex_status(helios, buf, size, hardware_access) == 0;
+}
+
+/* Explicit GREEN-A opt-in. Default OPAQUE_WIN32 remains the WDDM object. */
+static bool
+helios_carrier_export_enabled(void)
+{
+   static volatile LONG cached = -1;
+   LONG value = InterlockedCompareExchange(&cached, -1, -1);
+   if (value < 0) {
+      char env[8] = { 0 };
+      const DWORD length = GetEnvironmentVariableA(
+         "HELIOS_P06_E1_CARRIER_EXPORT", env, sizeof(env));
+      const LONG enabled = length == 1 && env[0] == '1';
+      InterlockedCompareExchange(&cached, enabled, -1);
+      value = InterlockedCompareExchange(&cached, -1, -1);
+   }
+   return value == 1;
+}
+
+static NTSTATUS
+helios_carrier_escape(struct helios *helios,
+                      struct helios_escape_p06_production_carrier *request)
+{
+   helios_hdr_init(&request->hdr, HELIOS_ESCAPE_P06_PRODUCTION_CARRIER,
+                   sizeof(*request));
+   return helios_escape_ex_status(helios, request, sizeof(*request), false);
+}
+
+static bool
+helios_carrier_id_nonzero(const uint8_t id[16])
+{
+   for (unsigned i = 0; i < 16; i++) {
+      if (id[i])
+         return true;
+   }
+   return false;
+}
+
+static bool
+helios_carrier_win32_name_valid(const uint16_t name[128],
+                                const uint8_t id[16])
+{
+   static const WCHAR prefix[] = L"Global\\HeliosP06Carrier_";
+   static const WCHAR digits[] = L"0123456789abcdef";
+   const size_t prefix_len = ARRAY_SIZE(prefix) - 1;
+   if (prefix_len + 32 >= 128)
+      return false;
+   for (size_t i = 0; i < prefix_len; i++) {
+      if (name[i] != prefix[i])
+         return false;
+   }
+   for (size_t i = 0; i < 16; i++) {
+      if (name[prefix_len + 2 * i] != digits[id[i] >> 4] ||
+          name[prefix_len + 2 * i + 1] != digits[id[i] & 15])
+         return false;
+   }
+   return name[prefix_len + 32] == 0;
 }
 
 /* P06 causal trace is process-local, opt-in, and has no effect on waits or
@@ -2990,12 +3105,47 @@ helios_retire_event_wait(struct helios *helios, uint64_t fence_id,
 
 /* Caller holds dev_mutex. Returns whether the struct must be freed (caller
  * frees OUTSIDE the lock). */
+static void
+helios_carrier_drop_owned(struct helios *helios, struct helios_sync *sync)
+{
+   if (sync->carrier_lease_live) {
+      struct helios_escape_p06_production_carrier request = { 0 };
+      request.op = HELIOS_P06_PRODUCTION_RELEASE;
+      memcpy(request.carrier_id, sync->carrier_id, sizeof(request.carrier_id));
+      request.generation = sync->carrier_generation;
+      request.slot_index = sync->carrier_slot;
+      const NTSTATUS status = helios_carrier_escape(helios, &request);
+      if (status != 0)
+         helios_diag("E1 carrier RELEASE failed status=0x%08x slot=%u",
+                     (unsigned)status, sync->carrier_slot);
+      sync->carrier_lease_live = false;
+   }
+   if (sync->carrier_view_readonly) {
+      if (!UnmapViewOfFile((const void *)sync->carrier_view_readonly))
+         helios_diag("E1 carrier UnmapViewOfFile failed err=%lu",
+                     (unsigned long)GetLastError());
+      sync->carrier_view_readonly = NULL;
+   }
+   if (sync->carrier_handle_owned) {
+      if (!CloseHandle(sync->carrier_handle_owned))
+         helios_diag("E1 carrier CloseHandle failed err=%lu",
+                     (unsigned long)GetLastError());
+      sync->carrier_handle_owned = NULL;
+   }
+   memset(sync->carrier_id, 0, sizeof(sync->carrier_id));
+   sync->carrier_slot = 0;
+   sync->carrier_generation = 0;
+   sync->backing = HELIOS_SYNC_BACKING_NONE;
+}
+
 static bool
 helios_sync_unref_locked(struct vn_renderer *renderer, struct helios_sync *sync)
 {
    assert(sync->refs > 0);
    if (--sync->refs)
       return false;
+   if (sync->backing == HELIOS_SYNC_BACKING_E1_V2)
+      helios_carrier_drop_owned((struct helios *)renderer, sync);
    if (sync->wddm_local)
       helios_wddm_sync_destroy(renderer, sync->wddm_local);
    if (sync->nt_named_handle) {
@@ -4348,6 +4498,72 @@ helios_wait(struct vn_renderer *renderer, const struct vn_renderer_wait *wait)
       return final_result; \
    } while (0)
 
+   uint32_t e1_count = 0;
+   for (uint32_t i = 0; i < wait->sync_count; i++) {
+      const struct helios_sync *sync = (const struct helios_sync *)wait->syncs[i];
+      e1_count += sync->backing == HELIOS_SYNC_BACKING_E1_V2;
+   }
+   if (e1_count) {
+      uint32_t e1_complete = 0;
+      for (uint32_t i = 0; i < wait->sync_count; i++) {
+         const struct helios_sync *sync = (const struct helios_sync *)wait->syncs[i];
+         if (sync->backing != HELIOS_SYNC_BACKING_E1_V2)
+            continue;
+         struct helios_carrier_v2_snapshot snapshot;
+         if (!helios_carrier_read_snapshot(sync->carrier_view_readonly, &snapshot) ||
+             memcmp(snapshot.carrier_id, sync->carrier_id,
+                    sizeof(sync->carrier_id)) != 0)
+            HELIOS_P06_WAIT_RETURN(VK_ERROR_INVALID_EXTERNAL_HANDLE);
+         const enum helios_carrier_observation observed =
+            helios_carrier_observe(&snapshot, wait->sync_values[i]);
+         if (observed == HELIOS_CARRIER_ERROR)
+            HELIOS_P06_WAIT_RETURN(helios_wire_vk_result(
+               (struct helios_wire_result) {
+                  HELIOS_WIRE_ERROR, snapshot.terminal_response_type }));
+         e1_complete += observed == HELIOS_CARRIER_COMPLETE;
+      }
+      if (wait->wait_any && e1_complete)
+         HELIOS_P06_WAIT_RETURN(VK_SUCCESS);
+      if (!wait->wait_any && e1_complete != e1_count)
+         HELIOS_P06_WAIT_RETURN(wait->timeout == 0 ? VK_TIMEOUT : VK_ERROR_UNKNOWN);
+      if (e1_count == wait->sync_count)
+         HELIOS_P06_WAIT_RETURN(e1_complete ? VK_SUCCESS :
+                                (wait->timeout == 0 ? VK_TIMEOUT : VK_ERROR_UNKNOWN));
+
+      /* Retain the WDDM wait implementation for the remaining handles. E1
+       * pending with a blocking timeout has no wake primitive until GREEN-B;
+       * probe WDDM once and fail closed if none is already complete. */
+      const uint32_t count = wait->sync_count - e1_count;
+      struct vn_renderer_sync **legacy_syncs = calloc(count, sizeof(*legacy_syncs));
+      uint64_t *legacy_values = calloc(count, sizeof(*legacy_values));
+      if (!legacy_syncs || !legacy_values) {
+         free(legacy_syncs);
+         free(legacy_values);
+         HELIOS_P06_WAIT_RETURN(VK_ERROR_OUT_OF_HOST_MEMORY);
+      }
+      uint32_t index = 0;
+      for (uint32_t i = 0; i < wait->sync_count; i++) {
+         const struct helios_sync *sync = (const struct helios_sync *)wait->syncs[i];
+         if (sync->backing == HELIOS_SYNC_BACKING_E1_V2)
+            continue;
+         legacy_syncs[index] = wait->syncs[i];
+         legacy_values[index++] = wait->sync_values[i];
+      }
+      const struct vn_renderer_wait legacy_wait = {
+         .wait_any = wait->wait_any,
+         .timeout = e1_complete == 0 ? 0 : wait->timeout,
+         .syncs = legacy_syncs,
+         .sync_values = legacy_values,
+         .sync_count = count,
+      };
+      const VkResult legacy_result = helios_wait(renderer, &legacy_wait);
+      free(legacy_values);
+      free(legacy_syncs);
+      if (legacy_result == VK_TIMEOUT && !e1_complete && wait->timeout != 0)
+         HELIOS_P06_WAIT_RETURN(VK_ERROR_UNKNOWN);
+      HELIOS_P06_WAIT_RETURN(legacy_result);
+   }
+
    if (helios->perf.enabled)
       helios->perf.wait_calls++;
 
@@ -4890,7 +5106,9 @@ helios_sync_create(struct vn_renderer *renderer,
    sync->base.sync_id = 0; /* unused: Helios does not carry host sync ids on the wire */
    sync->val = initial_val;
    sync->refs = 1;
-   if (flags & VN_RENDERER_SYNC_SHAREABLE) {
+   sync->backing = HELIOS_SYNC_BACKING_NONE;
+   if ((flags & VN_RENDERER_SYNC_SHAREABLE) &&
+       !helios_carrier_export_enabled()) {
       VkResult result =
          helios_wddm_sync_create(renderer, initial_val, true,
                                  &sync->wddm_local, &sync->wddm_global,
@@ -4899,6 +5117,7 @@ helios_sync_create(struct vn_renderer *renderer,
          free(sync);
          return result;
       }
+      sync->backing = HELIOS_SYNC_BACKING_WDDM;
    }
 
    *out_sync = &sync->base;
@@ -4914,6 +5133,9 @@ helios_sync_destroy(struct vn_renderer *renderer, struct vn_renderer_sync *_sync
    /* Drop the owner reference; a queued retire entry may still hold one, in
     * which case the retire thread frees the struct after its WAIT_FENCE. */
    mtx_lock(&helios->dev_mutex);
+   if (sync->backing == HELIOS_SYNC_BACKING_E1_V2 &&
+       sync->carrier_lease_live)
+      helios_carrier_drop_owned(helios, sync);
    const bool free_sync = helios_sync_unref_locked(renderer, sync);
    mtx_unlock(&helios->dev_mutex);
 
@@ -4930,6 +5152,11 @@ helios_sync_reset(struct vn_renderer *renderer,
    struct helios_sync *sync = (struct helios_sync *)_sync;
 
    mtx_lock(&helios->dev_mutex);
+   if (sync->backing == HELIOS_SYNC_BACKING_E1_V2 &&
+       !sync->carrier_lease_live) {
+      mtx_unlock(&helios->dev_mutex);
+      return VK_ERROR_INVALID_EXTERNAL_HANDLE;
+   }
    sync->val = initial_val;
    sync->pending_count = 0;
    if (sync->wddm_local)
@@ -4947,6 +5174,16 @@ helios_sync_read(struct vn_renderer *renderer,
    struct helios_sync *sync = (struct helios_sync *)_sync;
    uint64_t fences[HELIOS_SYNC_PENDING_MAX];
    uint32_t fence_count = 0;
+
+   if (sync->backing == HELIOS_SYNC_BACKING_E1_V2) {
+      struct helios_carrier_v2_snapshot snapshot;
+      if (!helios_carrier_read_snapshot(sync->carrier_view_readonly, &snapshot) ||
+          memcmp(snapshot.carrier_id, sync->carrier_id,
+                 sizeof(sync->carrier_id)) != 0)
+         return VK_ERROR_INVALID_EXTERNAL_HANDLE;
+      *val = snapshot.completed_value;
+      return VK_SUCCESS;
+   }
 
    mtx_lock(&helios->dev_mutex);
    for (uint32_t i = 0; i < sync->pending_count; i++) {
@@ -5008,6 +5245,11 @@ helios_sync_write(struct vn_renderer *renderer,
    struct helios_sync *sync = (struct helios_sync *)_sync;
 
    mtx_lock(&helios->dev_mutex);
+   if (sync->backing == HELIOS_SYNC_BACKING_E1_V2 &&
+       !sync->carrier_lease_live) {
+      mtx_unlock(&helios->dev_mutex);
+      return VK_ERROR_INVALID_EXTERNAL_HANDLE;
+   }
    sync->val = val;
    sync->pending_count = 0;
    if (sync->wddm_local)
@@ -5028,12 +5270,88 @@ vn_renderer_helios_sync_create_from_win32(
       return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    sync->refs = 1;
+   sync->backing = HELIOS_SYNC_BACKING_NONE;
    VkResult result;
    switch (handle_type) {
    case VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_WIN32_BIT:
+   {
+      /* Classify by read-only payload before touching D3DKMT. Once the Helios
+       * signature is seen, every malformed/provenance failure stays on E1. */
+      const void *candidate =
+         MapViewOfFile((HANDLE)handle, FILE_MAP_READ, 0, 0, sizeof(uint64_t));
+      const bool e1_signature = candidate && helios_carrier_has_magic(candidate);
+      if (candidate)
+         UnmapViewOfFile(candidate);
+      struct helios_carrier_v2_snapshot initial;
+      enum helios_carrier_classification classification = HELIOS_CARRIER_FOREIGN;
+      if (e1_signature) {
+         candidate = MapViewOfFile((HANDLE)handle, FILE_MAP_READ, 0, 0,
+                                   sizeof(struct helios_carrier_v2_record));
+         classification = candidate ? helios_carrier_classify(candidate, &initial) :
+                                      HELIOS_CARRIER_INVALID;
+         if (candidate)
+            UnmapViewOfFile(candidate);
+         if (classification == HELIOS_CARRIER_FOREIGN)
+            classification = HELIOS_CARRIER_INVALID;
+      }
+      if (classification == HELIOS_CARRIER_INVALID) {
+         free(sync);
+         return VK_ERROR_INVALID_EXTERNAL_HANDLE;
+      }
+      if (classification == HELIOS_CARRIER_VALID) {
+         HANDLE owned = NULL;
+         if (!DuplicateHandle(GetCurrentProcess(), (HANDLE)handle,
+                              GetCurrentProcess(), &owned, 0, FALSE,
+                              DUPLICATE_SAME_ACCESS)) {
+            free(sync);
+            return VK_ERROR_INVALID_EXTERNAL_HANDLE;
+         }
+         const volatile struct helios_carrier_v2_record *view =
+            MapViewOfFile(owned, FILE_MAP_READ, 0, 0,
+                          sizeof(struct helios_carrier_v2_record));
+         struct helios_carrier_v2_snapshot snapshot;
+         struct helios_escape_p06_production_carrier request = { 0 };
+         if (!view || !helios_carrier_read_snapshot(view, &snapshot)) {
+            if (view)
+               UnmapViewOfFile((const void *)view);
+            CloseHandle(owned);
+            free(sync);
+            return VK_ERROR_INVALID_EXTERNAL_HANDLE;
+         }
+         if (memcmp(initial.carrier_id, snapshot.carrier_id,
+                    sizeof(initial.carrier_id)) != 0) {
+            UnmapViewOfFile((const void *)view);
+            CloseHandle(owned);
+            free(sync);
+            return VK_ERROR_INVALID_EXTERNAL_HANDLE;
+         }
+         request.op = HELIOS_P06_PRODUCTION_ATTEST_HANDLE;
+         memcpy(request.carrier_id, snapshot.carrier_id,
+                sizeof(request.carrier_id));
+         request.expected_record_version = HELIOS_P06_PRODUCTION_SECTION_VERSION;
+         request.user_handle = (uint64_t)(uintptr_t)owned;
+         if (helios_carrier_escape((struct helios *)renderer, &request) != 0 ||
+             request.status != HELIOS_P06_ATTEST_SUCCESS) {
+            UnmapViewOfFile((const void *)view);
+            CloseHandle(owned);
+            free(sync);
+            return VK_ERROR_INVALID_EXTERNAL_HANDLE;
+         }
+         sync->backing = HELIOS_SYNC_BACKING_E1_V2;
+         sync->carrier_handle_owned = owned;
+         sync->carrier_view_readonly = view;
+         memcpy(sync->carrier_id, snapshot.carrier_id,
+                sizeof(sync->carrier_id));
+         sync->val = snapshot.completed_value;
+         sync->base.sync_id = 0;
+         *out_sync = &sync->base;
+         return VK_SUCCESS;
+      }
+      /* Signature absent: retain the exact legacy WDDM NT-handle route. */
       result = helios_wddm_sync_open_nt(renderer, handle, &sync->wddm_local,
                                         &sync->wddm_cpu_va);
       break;
+   }
    case VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_WIN32_KMT_BIT:
       sync->wddm_global = HandleToULong(handle);
       result = helios_wddm_sync_open_kmt(renderer, sync->wddm_global,
@@ -5050,6 +5368,7 @@ vn_renderer_helios_sync_create_from_win32(
       return result;
    }
 
+   sync->backing = HELIOS_SYNC_BACKING_WDDM;
    sync->base.sync_id = 0;
    if (sync->wddm_cpu_va)
       sync->val = *(const volatile uint64_t *)sync->wddm_cpu_va;
@@ -5132,8 +5451,18 @@ vn_renderer_helios_sync_share_named(struct vn_renderer *renderer,
    struct helios_sync *sync = (struct helios_sync *)_sync;
    const SECURITY_ATTRIBUTES *sa = security_attributes;
 
-   if (!sync->wddm_local)
+   /* Named sharing remains LEGACY_WDDM_NAMED_PATH. Do not silently give one
+    * GREEN-A semaphore both a WDDM named payload and an E1 handle payload. */
+   if (sync->backing == HELIOS_SYNC_BACKING_E1_V2)
       return VK_ERROR_INVALID_EXTERNAL_HANDLE;
+   if (!sync->wddm_local) {
+      VkResult result = helios_wddm_sync_create(
+         renderer, sync->val, true, &sync->wddm_local,
+         &sync->wddm_global, &sync->wddm_cpu_va);
+      if (result != VK_SUCCESS)
+         return result;
+      sync->backing = HELIOS_SYNC_BACKING_WDDM;
+   }
    if (sync->nt_named_handle) /* already published once; names are per-object */
       return VK_SUCCESS;
 
@@ -5207,6 +5536,7 @@ vn_renderer_helios_sync_create_from_win32_name(struct vn_renderer *renderer,
    }
 
    sync->refs = 1;
+   sync->backing = HELIOS_SYNC_BACKING_WDDM;
    VkResult result = helios_wddm_sync_open_nt(renderer, open_name.hNtHandle,
                                               &sync->wddm_local,
                                               &sync->wddm_cpu_va);
@@ -5229,6 +5559,73 @@ vn_renderer_helios_sync_create_from_win32_name(struct vn_renderer *renderer,
    return VK_SUCCESS;
 }
 
+static VkResult
+helios_carrier_create_producer(struct vn_renderer *renderer,
+                               struct helios_sync *sync)
+{
+   struct helios *helios = (struct helios *)renderer;
+   if (sync->backing == HELIOS_SYNC_BACKING_E1_V2)
+      return sync->carrier_lease_live ? VK_SUCCESS : VK_ERROR_INVALID_EXTERNAL_HANDLE;
+   if (sync->wddm_local || sync->nt_named_handle)
+      return VK_ERROR_INVALID_EXTERNAL_HANDLE;
+
+   struct helios_escape_p06_production_carrier request = { 0 };
+   request.op = HELIOS_P06_PRODUCTION_CREATE;
+   request.value = sync->val;
+   if (helios_carrier_escape(helios, &request) != 0)
+      return VK_ERROR_INVALID_EXTERNAL_HANDLE;
+
+   sync->carrier_lease_live = true;
+   sync->carrier_generation = request.generation;
+   sync->carrier_slot = request.slot_index;
+   memcpy(sync->carrier_id, request.carrier_id, sizeof(sync->carrier_id));
+   if (!helios_carrier_id_nonzero(request.carrier_id) ||
+       !(request.lease_flags & HELIOS_P06_SECTION_LEASE_KERNEL_HANDLE_RETAINED) ||
+       !helios_carrier_win32_name_valid(request.object_name, request.carrier_id))
+      goto fail;
+
+   sync->carrier_handle_owned = OpenFileMappingW(
+      FILE_MAP_READ, FALSE, (const WCHAR *)request.object_name);
+   if (!sync->carrier_handle_owned)
+      goto fail;
+   sync->carrier_view_readonly = MapViewOfFile(
+      sync->carrier_handle_owned, FILE_MAP_READ, 0, 0,
+      sizeof(struct helios_carrier_v2_record));
+   struct helios_carrier_v2_snapshot snapshot;
+   if (!sync->carrier_view_readonly ||
+       !helios_carrier_read_snapshot(sync->carrier_view_readonly, &snapshot) ||
+       memcmp(snapshot.carrier_id, sync->carrier_id,
+              sizeof(sync->carrier_id)) != 0)
+      goto fail;
+   sync->backing = HELIOS_SYNC_BACKING_E1_V2;
+   return VK_SUCCESS;
+
+fail:
+   helios_carrier_drop_owned(helios, sync);
+   return VK_ERROR_INVALID_EXTERNAL_HANDLE;
+}
+
+/* Controlled GREEN-A publication helpers. Submit/retire do not call these;
+ * the KMD's P06_E1_TEST gate protects the publish verbs. */
+static VkResult __attribute__((unused))
+helios_carrier_publish(struct vn_renderer *renderer, struct vn_renderer_sync *_sync,
+                       uint64_t value, uint32_t response_type)
+{
+   struct helios_sync *sync = (struct helios_sync *)_sync;
+   if (sync->backing != HELIOS_SYNC_BACKING_E1_V2 || !sync->carrier_lease_live)
+      return VK_ERROR_INVALID_EXTERNAL_HANDLE;
+   struct helios_escape_p06_production_carrier request = { 0 };
+   request.op = response_type ? HELIOS_P06_PRODUCTION_PUBLISH_ERROR :
+                                HELIOS_P06_PRODUCTION_PUBLISH_SUCCESS;
+   memcpy(request.carrier_id, sync->carrier_id, sizeof(request.carrier_id));
+   request.generation = sync->carrier_generation;
+   request.slot_index = sync->carrier_slot;
+   request.value = value;
+   request.response_type = response_type;
+   return helios_carrier_escape((struct helios *)renderer, &request) == 0 ?
+      VK_SUCCESS : VK_ERROR_UNKNOWN;
+}
+
 VkResult
 vn_renderer_helios_sync_export_win32(
    struct vn_renderer *renderer,
@@ -5237,6 +5634,26 @@ vn_renderer_helios_sync_export_win32(
    void **out_handle)
 {
    struct helios_sync *sync = (struct helios_sync *)_sync;
+
+   if (handle_type == VK_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_WIN32_BIT &&
+       (sync->backing == HELIOS_SYNC_BACKING_E1_V2 ||
+        helios_carrier_export_enabled())) {
+      if (sync->backing != HELIOS_SYNC_BACKING_E1_V2) {
+         VkResult result = helios_carrier_create_producer(renderer, sync);
+         if (result != VK_SUCCESS)
+            return result;
+      }
+      HANDLE exported = NULL;
+      if (!DuplicateHandle(GetCurrentProcess(), sync->carrier_handle_owned,
+                           GetCurrentProcess(), &exported, 0, FALSE,
+                           DUPLICATE_SAME_ACCESS))
+         return VK_ERROR_INVALID_EXTERNAL_HANDLE;
+      *out_handle = exported;
+      return VK_SUCCESS;
+   }
+
+   if (sync->backing == HELIOS_SYNC_BACKING_E1_V2)
+      return VK_ERROR_INVALID_EXTERNAL_HANDLE;
 
    if (!sync->wddm_local) {
       VkResult result =
@@ -5247,6 +5664,7 @@ vn_renderer_helios_sync_export_win32(
                                  &sync->wddm_cpu_va);
       if (result != VK_SUCCESS)
          return result;
+      sync->backing = HELIOS_SYNC_BACKING_WDDM;
    }
 
    switch (handle_type) {
