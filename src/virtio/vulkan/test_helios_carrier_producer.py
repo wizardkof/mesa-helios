@@ -16,7 +16,7 @@ p.add_argument('--output', type=Path, required=True)
 p.add_argument('--compile-only', action='store_true')
 a = p.parse_args()
 root = Path(__file__).resolve().parent
-source = (root / 'vn_renderer_helios.c').read_text()
+source = (root / 'vn_renderer_helios.c').read_text(encoding="utf-8")
 
 def block(marker):
     start = source.index(marker)
@@ -40,13 +40,13 @@ if re.search(r'^helios_carrier_open_reader\(', source, re.M):
 functions.append(('VkResult', 'helios_carrier_create_producer'))
 for ret, name in functions:
     parts.append('static ' + ret + '\n' + block(name + '('))
-template = (root / 'test_helios_carrier_producer_mock.c').read_text()
+template = (root / 'test_helios_carrier_producer_mock.c').read_text(encoding="utf-8")
 assert template.count('/* PRODUCTION_STRUCTS */') == template.count('/* PRODUCTION_FUNCTIONS */') == 1
 unit = template.replace('/* PRODUCTION_STRUCTS */', '\n'.join(parts[:4]))
 unit = unit.replace('/* PRODUCTION_FUNCTIONS */', '\n'.join(parts[4:]))
 a.output.parent.mkdir(parents=True, exist_ok=True)
 generated = a.output.with_suffix('.generated.c')
-generated.write_text(unit)
+generated.write_text(unit, encoding="utf-8")
 cmd = [a.cc, '-std=c11', '-fshort-wchar', '-Wall', '-Wextra', '-Wno-unused-function',
        '-I' + str(root), str(generated), '-o', str(a.output)]
 print('BUILD', ' '.join(cmd), flush=True)
