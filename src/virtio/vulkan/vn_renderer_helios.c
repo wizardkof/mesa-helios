@@ -1603,21 +1603,26 @@ helios_carrier_escape(struct helios *helios,
 }
 
 /* No support cache: both calls use this renderer's actual adapter/device.
- * Counter is identity only, never an authorization token. Saturation refuses.
+ * Identity is correlation only, never an authorization token. RNG failure refuses.
  */
 static bool
 helios_attest_exchange(struct helios *helios, uint32_t operation,
                       uint64_t handle, const uint8_t carrier_id[16],
                       struct helios_attest_transport *response)
 {
-   static DECLSPEC_ALIGN(8) volatile LONG64 serial;
-   const LONG64 sequence = InterlockedIncrement64(&serial);
-   if (sequence <= 0)
-      return false;
+   /* Fresh system RNG identity also separates concurrent DLL instances and
+    * unload/reload lifetimes. It correlates bytes; it grants no authority. */
    uint8_t identity[16] = {0};
-   const uint32_t pid = GetCurrentProcessId();
-   memcpy(identity, &sequence, sizeof(sequence));
-   memcpy(identity + 8, &pid, sizeof(pid));
+   HMODULE bcrypt = LoadLibraryExW(L"bcrypt.dll", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
+   if (!bcrypt)
+      return false;
+   typedef NTSTATUS (WINAPI *random_fn)(void *, PUCHAR, ULONG, ULONG);
+   random_fn random = (random_fn)GetProcAddress(bcrypt, "BCryptGenRandom");
+   const bool generated = random && random(NULL, identity, sizeof(identity), 2) == 0;
+   FreeLibrary(bcrypt);
+   const uint8_t zero[16] = {0};
+   if (!generated || memcmp(identity, zero, sizeof(identity)) == 0)
+      return false;
    const struct helios_attest_transport expected =
       helios_attest_request(operation, identity, handle, carrier_id, 2);
    *response = expected;
