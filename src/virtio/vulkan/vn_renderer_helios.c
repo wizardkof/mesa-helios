@@ -713,6 +713,7 @@ static volatile LONG64 helios_p06_wait_call_seq;
 static _Thread_local uint64_t helios_p06_wait_call_id;
 static _Thread_local const char *helios_p06_wait_origin;
 static bool helios_p06_diag_enabled(void);
+static void helios_p06_diag(struct helios *, const char *, uint64_t, const char *);
 
 struct helios_p06_wait_scope {
    uint64_t previous_call_id;
@@ -1626,8 +1627,24 @@ helios_attest_exchange(struct helios *helios, uint32_t operation,
    const struct helios_attest_transport expected =
       helios_attest_request(operation, identity, handle, carrier_id, 2);
    *response = expected;
-   return helios_escape_ex_status(helios, response, sizeof(*response), false) == 0 &&
-          helios_attest_response_valid(response, &expected, sizeof(*response));
+   const NTSTATUS status = helios_escape_ex_status(helios, response, sizeof(*response), false);
+   const bool valid = helios_attest_response_valid(response, &expected, sizeof(*response));
+   if (helios_p06_diag_enabled()) {
+      char raw[241], fields[512];
+      static const char digits[] = "0123456789abcdef";
+      const uint8_t *bytes = (const uint8_t *)response;
+      for (unsigned i = 0; i < sizeof(*response); i++) {
+         raw[2*i] = digits[bytes[i] >> 4];
+         raw[2*i+1] = digits[bytes[i] & 15];
+      }
+      raw[240] = 0;
+      snprintf(fields, sizeof(fields),
+               "op=%u ntstatus=0x%08x valid=%u accepted=%u class=%u raw120=%s",
+               operation, (unsigned)status, (unsigned)valid,
+               response->accepted, response->refusal_class, raw);
+      helios_p06_diag(helios, "ATTEST_TRANSPORT", 0, fields);
+   }
+   return status == 0 && valid;
 }
 
 static bool

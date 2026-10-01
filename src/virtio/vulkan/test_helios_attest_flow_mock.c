@@ -30,6 +30,8 @@ static NTSTATUS helios_escape_ex_status(struct helios*h,void* data,size_t n,bool
  if(mode==8){r->accepted=0;r->refusal_class=0;}
  return 0;
 }
+static bool helios_p06_diag_enabled(void){return false;}
+static void helios_p06_diag(struct helios*h,const char*e,uint64_t f,const char*t){(void)h;(void)e;(void)f;(void)t;}
 /* FUNCTIONS */
 int main(void){
  struct helios h={123};uint8_t carrier[16]={2};
