@@ -47,6 +47,7 @@
 #include "vn_renderer_internal.h"
 #include "vn_renderer_helios_wait_result.h"
 #include "vn_renderer_helios_carrier_v2.h"
+#include "vn_renderer_helios_attest_transport.h"
 #include "vn_device.h"
 #include "vn_device_memory.h"
 #include "vn_instance.h" /* helios_venus_instance_ctx_id (instance-scoped export) */
@@ -1599,6 +1600,41 @@ helios_carrier_escape(struct helios *helios,
    helios_hdr_init(&request->hdr, HELIOS_ESCAPE_P06_PRODUCTION_CARRIER,
                    sizeof(*request));
    return helios_escape_ex_status(helios, request, sizeof(*request), false);
+}
+
+/* No support cache: both calls use this renderer's actual adapter/device.
+ * Counter is identity only, never an authorization token. Saturation refuses.
+ */
+static bool
+helios_attest_exchange(struct helios *helios, uint32_t operation,
+                      uint64_t handle, const uint8_t carrier_id[16],
+                      struct helios_attest_transport *response)
+{
+   static DECLSPEC_ALIGN(8) volatile LONG64 serial;
+   const LONG64 sequence = InterlockedIncrement64(&serial);
+   if (sequence <= 0)
+      return false;
+   uint8_t identity[16] = {0};
+   const uint32_t pid = GetCurrentProcessId();
+   memcpy(identity, &sequence, sizeof(sequence));
+   memcpy(identity + 8, &pid, sizeof(pid));
+   const struct helios_attest_transport expected =
+      helios_attest_request(operation, identity, handle, carrier_id, 2);
+   *response = expected;
+   return helios_escape_ex_status(helios, response, sizeof(*response), false) == 0 &&
+          helios_attest_response_valid(response, &expected, sizeof(*response));
+}
+
+static bool
+helios_carrier_attest_negotiated(struct helios *helios, HANDLE handle,
+                                const uint8_t carrier_id[16])
+{
+   struct helios_attest_transport response;
+   if (!helios_attest_exchange(helios, HELIOS_ATTEST_QUERY, 0, carrier_id, &response))
+      return false;
+   return helios_attest_exchange(helios, HELIOS_ATTEST_CALL,
+                                 (uint64_t)(uintptr_t)handle, carrier_id, &response) &&
+          response.accepted == 1 && response.refusal_class == 0;
 }
 
 static bool
@@ -5310,7 +5346,6 @@ vn_renderer_helios_sync_create_from_win32(
             MapViewOfFile(owned, FILE_MAP_READ, 0, 0,
                           sizeof(struct helios_carrier_v2_record));
          struct helios_carrier_v2_snapshot snapshot;
-         struct helios_escape_p06_production_carrier request = { 0 };
          if (!view || !helios_carrier_read_snapshot(view, &snapshot)) {
             if (view)
                UnmapViewOfFile((const void *)view);
@@ -5325,13 +5360,8 @@ vn_renderer_helios_sync_create_from_win32(
             free(sync);
             return VK_ERROR_INVALID_EXTERNAL_HANDLE;
          }
-         request.op = HELIOS_P06_PRODUCTION_ATTEST_HANDLE;
-         memcpy(request.carrier_id, snapshot.carrier_id,
-                sizeof(request.carrier_id));
-         request.expected_record_version = HELIOS_P06_PRODUCTION_SECTION_VERSION;
-         request.user_handle = (uint64_t)(uintptr_t)owned;
-         if (helios_carrier_escape((struct helios *)renderer, &request) != 0 ||
-             request.status != HELIOS_P06_ATTEST_SUCCESS) {
+         if (!helios_carrier_attest_negotiated((struct helios *)renderer,
+                                               owned, snapshot.carrier_id)) {
             UnmapViewOfFile((const void *)view);
             CloseHandle(owned);
             free(sync);
