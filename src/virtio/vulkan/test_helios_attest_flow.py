@@ -9,9 +9,11 @@ def body(name):
  while depth:
   depth+=(s[end]=='{')-(s[end]=='}');end+=1
  return 'static bool\n'+s[start:end]
-f='\n'.join(body(n) for n in ['helios_attest_exchange','helios_carrier_attest_negotiated'])
+helper=body('helios_p06_request_id')
+flow='\n'.join(body(n) for n in ['helios_attest_exchange','helios_carrier_attest_negotiated'])
+f=helper+'\n'+flow
 t=(r/'test_helios_attest_flow_mock.c').read_text(encoding='utf-8')
-t=t.replace('/* FUNCTIONS */',f+'\n'+f.replace('helios_attest_exchange','second_exchange').replace('helios_carrier_attest_negotiated','second_negotiated'))
+t=t.replace('/* FUNCTIONS */',f+'\n'+flow.replace('helios_attest_exchange','second_exchange').replace('helios_carrier_attest_negotiated','second_negotiated'))
 a.output.parent.mkdir(parents=True,exist_ok=True);g=a.output.with_suffix('.generated.c');g.write_text(t,encoding='utf-8')
 subprocess.run([a.cc,'-std=c11','-Wall','-Wextra','-Wno-unused-function','-I'+str(r),str(g),'-o',str(a.output)],check=True)
 if not a.compile_only:subprocess.run([str(a.output.resolve())],check=True)

@@ -46,6 +46,9 @@
 
 #include "vn_renderer_internal.h"
 #include "vn_renderer_helios_wait_result.h"
+#include "vn_renderer_helios_green_b_submit.h"
+#include "vn_renderer_helios_green_b_wait.h"
+#include "util/os_time.h"
 #include "vn_renderer_helios_carrier_v2.h"
 #include "vn_renderer_helios_attest_transport.h"
 #include "vn_device.h"
@@ -1603,6 +1606,22 @@ helios_carrier_escape(struct helios *helios,
    return helios_escape_ex_status(helios, request, sizeof(*request), false);
 }
 
+static bool
+helios_p06_request_id(uint8_t identity[16])
+{
+   /* Fresh system RNG identity also separates concurrent DLL instances and
+    * unload/reload lifetimes. It correlates bytes; it grants no authority. */
+   HMODULE bcrypt = LoadLibraryExW(L"bcrypt.dll", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
+   if (!bcrypt)
+      return false;
+   typedef NTSTATUS (WINAPI *random_fn)(void *, PUCHAR, ULONG, ULONG);
+   random_fn random = (random_fn)GetProcAddress(bcrypt, "BCryptGenRandom");
+   const bool generated = random && random(NULL, identity, 16, 2) == 0;
+   FreeLibrary(bcrypt);
+   const uint8_t zero[16] = {0};
+   return generated && memcmp(identity, zero, sizeof(zero)) != 0;
+}
+
 /* No support cache: both calls use this renderer's actual adapter/device.
  * Identity is correlation only, never an authorization token. RNG failure refuses.
  */
@@ -1611,18 +1630,8 @@ helios_attest_exchange(struct helios *helios, uint32_t operation,
                       uint64_t handle, const uint8_t carrier_id[16],
                       struct helios_attest_transport *response)
 {
-   /* Fresh system RNG identity also separates concurrent DLL instances and
-    * unload/reload lifetimes. It correlates bytes; it grants no authority. */
    uint8_t identity[16] = {0};
-   HMODULE bcrypt = LoadLibraryExW(L"bcrypt.dll", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
-   if (!bcrypt)
-      return false;
-   typedef NTSTATUS (WINAPI *random_fn)(void *, PUCHAR, ULONG, ULONG);
-   random_fn random = (random_fn)GetProcAddress(bcrypt, "BCryptGenRandom");
-   const bool generated = random && random(NULL, identity, sizeof(identity), 2) == 0;
-   FreeLibrary(bcrypt);
-   const uint8_t zero[16] = {0};
-   if (!generated || memcmp(identity, zero, sizeof(identity)) == 0)
+   if (!helios_p06_request_id(identity))
       return false;
    const struct helios_attest_transport expected =
       helios_attest_request(operation, identity, handle, carrier_id, 2);
@@ -4444,6 +4453,58 @@ vn_renderer_helios_external_memory_destroy(
 
 /* ── ops ───────────────────────────────────────────────────────────────────── */
 
+/* E1 request IDs correlate one escape response; they grant no authority. */
+static bool
+helios_e1_fresh_request_id(uint8_t id[16])
+{
+   return helios_p06_request_id(id);
+}
+
+static int
+helios_e1_escape_callback(void *ctx, void *buffer, uint32_t size)
+{
+   return helios_escape(ctx, buffer, size);
+}
+
+/* Called with dev_mutex. A positive QUERY is required for each E1 submit;
+ * ATTEST support and an old cached result never authorize Green B. */
+static bool
+helios_e1_submit_batch(struct helios *helios,
+                       const struct vn_renderer_submit_batch *batch,
+                       const struct helios_e1_target *targets,
+                       uint32_t target_count, uint64_t *fence_id)
+{
+   uint8_t id[16];
+   if (!helios_e1_fresh_request_id(id))
+      return false;
+   const struct helios_e1_control query = helios_e1_control_query(id);
+   struct helios_e1_control response;
+   if (!helios_e1_control_exchange(&query, helios_e1_escape_callback,
+                                   helios, &response))
+      return false;
+   if (!helios_e1_fresh_request_id(id))
+      return false;
+   if (batch->cs_size == 0 || batch->cs_size > UINT32_MAX)
+      return false;
+   const size_t header_size = sizeof(struct helios_e1_submit) +
+                              target_count * sizeof(*targets);
+   if (header_size > UINT32_MAX - batch->cs_size)
+      return false;
+   const size_t total = header_size + batch->cs_size;
+   if (total > helios->submit_buf_capacity) {
+      uint8_t *grown = realloc(helios->submit_buf, total);
+      if (!grown)
+         return false;
+      helios->submit_buf = grown;
+      helios->submit_buf_capacity = total;
+   }
+   return helios_e1_submit_exchange(
+      helios, helios_e1_escape_callback, id, helios->ctx_id,
+      batch->ring_idx, batch->present_cookie, batch->present_value32,
+      targets, target_count, batch->cs_data, (uint32_t)batch->cs_size,
+      helios->submit_buf, helios->submit_buf_capacity, fence_id);
+}
+
 static VkResult
 helios_submit(struct vn_renderer *renderer, const struct vn_renderer_submit *submit)
 {
@@ -4471,14 +4532,44 @@ helios_submit(struct vn_renderer *renderer, const struct vn_renderer_submit *sub
             helios->perf.submit_empty_batches++;
       }
 
+      struct helios_e1_target e1_targets[HELIOS_E1_MAX_TARGETS];
+      uint32_t e1_count = 0;
+      for (uint32_t j = 0; j < batch->sync_count; j++) {
+         const struct helios_sync *sync = (const struct helios_sync *)batch->syncs[j];
+         if (sync->backing != HELIOS_SYNC_BACKING_E1_V2)
+            continue;
+         if (e1_count == HELIOS_E1_MAX_TARGETS ||
+             !sync->carrier_handle_owned ||
+             !helios_e1_nonzero16(sync->carrier_id) ||
+             batch->sync_values[j] == 0) {
+            result = VK_ERROR_INVALID_EXTERNAL_HANDLE;
+            break;
+         }
+         e1_targets[e1_count].carrier_handle =
+            (uint64_t)(uintptr_t)sync->carrier_handle_owned;
+         e1_targets[e1_count].target_value = batch->sync_values[j];
+         memcpy(e1_targets[e1_count].carrier_id, sync->carrier_id, 16);
+         e1_count++;
+      }
+      if (result != VK_SUCCESS)
+         break;
+      /* A sync-only E1 batch has no real host fence. Refuse before any
+       * producer-side state change or GPU submission. */
+      if (e1_count && !batch->cs_size) {
+         result = VK_ERROR_FEATURE_NOT_PRESENT;
+         break;
+      }
+
       uint64_t fence_id = 0;
       if (batch->cs_size) {
          if (perf)
             QueryPerformanceCounter(&t1);
-         const bool ok = helios_ioctl_submit_cs(
-            helios, batch->cs_data, batch->cs_size, batch->ring_idx,
-            batch->present_cookie, batch->present_value32,
-            &fence_id);
+         const bool ok = e1_count ?
+            helios_e1_submit_batch(helios, batch, e1_targets, e1_count,
+                                   &fence_id) :
+            helios_ioctl_submit_cs(helios, batch->cs_data, batch->cs_size,
+                                   batch->ring_idx, batch->present_cookie,
+                                   batch->present_value32, &fence_id);
          if (perf) {
             QueryPerformanceCounter(&t2);
             helios->perf.submit_escape_ticks += t2.QuadPart - t1.QuadPart;
@@ -4526,6 +4617,157 @@ helios_submit(struct vn_renderer *renderer, const struct vn_renderer_submit *sub
    return result;
 }
 
+/* Per-call aggregate event. Registrations belong to the importer object,
+ * independently of the producer lease; no dev_mutex is held while waiting. */
+struct helios_e1_wait_context {
+   struct helios *helios;
+   const struct vn_renderer_wait *wait;
+   HANDLE event;
+   uint64_t *tokens;
+   bool cleanup_failed;
+   VkResult failure;
+};
+static enum helios_e1_wait_state
+helios_e1_wait_observe(void *data)
+{
+   struct helios_e1_wait_context *ctx = data;
+   uint32_t complete = 0;
+   for (uint32_t i = 0; i < ctx->wait->sync_count; i++) {
+      const struct helios_sync *sync = (const struct helios_sync *)ctx->wait->syncs[i];
+      struct helios_carrier_v2_snapshot snap;
+      if (!helios_carrier_read_snapshot(sync->carrier_view_readonly, &snap) ||
+          memcmp(snap.carrier_id, sync->carrier_id, 16)) {
+         ctx->failure = VK_ERROR_INVALID_EXTERNAL_HANDLE;
+         return HELIOS_E1_WAIT_ERROR;
+      }
+      const enum helios_carrier_observation state =
+         helios_carrier_observe(&snap, ctx->wait->sync_values[i]);
+      if (state == HELIOS_CARRIER_ERROR) {
+         ctx->failure = VK_ERROR_UNKNOWN;
+         return HELIOS_E1_WAIT_ERROR;
+      }
+      complete += state == HELIOS_CARRIER_COMPLETE;
+   }
+   return (ctx->wait->wait_any ? complete != 0 : complete == ctx->wait->sync_count) ?
+      HELIOS_E1_WAIT_COMPLETE : HELIOS_E1_WAIT_PENDING;
+}
+static void
+helios_e1_wait_disarm(void *data)
+{
+   struct helios_e1_wait_context *ctx = data;
+   for (uint32_t i = 0; i < ctx->wait->sync_count; i++) {
+      if (!ctx->tokens[i]) continue;
+      uint8_t id[16];
+      if (!helios_e1_fresh_request_id(id)) {ctx->cleanup_failed = true;continue;}
+      struct helios_e1_control req = helios_e1_control_query(id), response;
+      req.operation = HELIOS_E1_CONTROL_UNREGISTER;
+      req.registration_token = ctx->tokens[i];
+      if (!helios_e1_control_exchange(&req, helios_e1_escape_callback,
+                                    ctx->helios, &response)) {
+         ctx->cleanup_failed = true;
+         continue;
+      }
+      ctx->tokens[i] = 0;
+   }
+}
+static int
+helios_e1_wait_arm(void *data)
+{
+   struct helios_e1_wait_context *ctx = data;
+   if (ctx->cleanup_failed || !ResetEvent(ctx->event)) return 0;
+   for (uint32_t i = 0; i < ctx->wait->sync_count; i++) {
+      const struct helios_sync *sync = (const struct helios_sync *)ctx->wait->syncs[i];
+      struct helios_carrier_v2_snapshot snap;
+      if (!helios_carrier_read_snapshot(sync->carrier_view_readonly, &snap) ||
+          memcmp(snap.carrier_id, sync->carrier_id, 16)) {
+         ctx->failure = VK_ERROR_INVALID_EXTERNAL_HANDLE;
+         return 0;
+      }
+      const enum helios_carrier_observation state =
+         helios_carrier_observe(&snap, ctx->wait->sync_values[i]);
+      if (state == HELIOS_CARRIER_ERROR) return 0;
+      /* An already-complete member of wait-all must not repeatedly signal the
+       * aggregate event while another member remains pending. REGISTER still
+       * performs the atomic predicate recheck for races after this snapshot. */
+      if (state == HELIOS_CARRIER_COMPLETE) continue;
+      uint8_t id[16];
+      if (!helios_e1_fresh_request_id(id)) return 0;
+      struct helios_e1_control req = helios_e1_control_query(id), response;
+      req.operation = HELIOS_E1_CONTROL_REGISTER;
+      req.carrier_handle = (uint64_t)(uintptr_t)sync->carrier_handle_owned;
+      req.event_handle = (uint64_t)(uintptr_t)ctx->event;
+      req.target_value = ctx->wait->sync_values[i];
+      req.record_version = 2;
+      memcpy(req.carrier_id, sync->carrier_id, 16);
+      if (!helios_e1_control_exchange(&req, helios_e1_escape_callback,
+                                    ctx->helios, &response)) return 0;
+      ctx->tokens[i] = response.response_token;
+   }
+   return 1;
+}
+static uint64_t
+helios_e1_wait_now(void *data)
+{
+   (void)data;
+   return (uint64_t)os_time_get_nano();
+}
+static enum helios_e1_wait_wake
+helios_e1_wait_event(void *data, uint64_t remaining)
+{
+   struct helios_e1_wait_context *ctx = data;
+   const uint64_t ms = remaining / 1000000 + (remaining % 1000000 != 0);
+   const DWORD timeout = remaining == UINT64_MAX ? INFINITE :
+      ms >= INFINITE ? INFINITE - 1 : (DWORD)ms;
+   const DWORD result = WaitForSingleObject(ctx->event, timeout);
+   if (result == WAIT_OBJECT_0) return HELIOS_E1_WAKE_EVENT;
+   if (result == WAIT_TIMEOUT) return HELIOS_E1_WAKE_TIMEOUT;
+   return HELIOS_E1_WAKE_FAILED;
+}
+static VkResult
+helios_e1_wait_blocking(struct helios *helios, const struct vn_renderer_wait *wait)
+{
+   const uint64_t wait_started = (uint64_t)os_time_get_nano();
+   /* Mixed sets are explicitly unsupported until both notification subsets
+    * can share this deadline. Never fall back after observing an E1 carrier. */
+   if (!wait->sync_count || wait->sync_count > 256) return VK_ERROR_FEATURE_NOT_PRESENT;
+   for (uint32_t i = 0; i < wait->sync_count; i++)
+      if (((const struct helios_sync *)wait->syncs[i])->backing != HELIOS_SYNC_BACKING_E1_V2)
+         return VK_ERROR_FEATURE_NOT_PRESENT;
+   struct helios_e1_wait_context ctx = { .helios = helios, .wait = wait,
+                                        .failure = VK_ERROR_UNKNOWN };
+   enum helios_e1_wait_state state = helios_e1_wait_observe(&ctx);
+   if (state == HELIOS_E1_WAIT_ERROR) return ctx.failure;
+   if (state == HELIOS_E1_WAIT_COMPLETE) return VK_SUCCESS;
+   if (!wait->timeout) return VK_TIMEOUT;
+   uint8_t id[16];
+   if (!helios_e1_fresh_request_id(id)) return VK_ERROR_UNKNOWN;
+   const struct helios_e1_control query = helios_e1_control_query(id);
+   struct helios_e1_control response;
+   if (!helios_e1_control_exchange(&query, helios_e1_escape_callback, helios, &response) ||
+       response.max_registrations < wait->sync_count) return VK_ERROR_FEATURE_NOT_PRESENT;
+   ctx.tokens = calloc(wait->sync_count, sizeof(*ctx.tokens));
+   if (!ctx.tokens) return VK_ERROR_OUT_OF_HOST_MEMORY;
+   ctx.event = CreateEventW(NULL, FALSE, FALSE, NULL);
+   if (!ctx.event) {free(ctx.tokens);return VK_ERROR_OUT_OF_HOST_MEMORY;}
+   const struct helios_e1_wait_ops ops = {
+      .ctx = &ctx, .observe = helios_e1_wait_observe, .arm = helios_e1_wait_arm,
+      .disarm = helios_e1_wait_disarm, .now_ns = helios_e1_wait_now,
+      .wait_event = helios_e1_wait_event,
+   };
+   const uint64_t setup_elapsed = (uint64_t)os_time_get_nano() - wait_started;
+   const uint64_t remaining = wait->timeout == UINT64_MAX ? UINT64_MAX :
+      setup_elapsed >= wait->timeout ? 0 : wait->timeout - setup_elapsed;
+   state = helios_e1_wait_run(&ops, remaining);
+   /* Partial arms also reach disarm; failed UNREGISTER cannot become success. */
+   const bool cleaned = !ctx.cleanup_failed && CloseHandle(ctx.event);
+   if (ctx.cleanup_failed) CloseHandle(ctx.event);
+   free(ctx.tokens);
+   if (!cleaned) return VK_ERROR_UNKNOWN;
+   if (state == HELIOS_E1_WAIT_COMPLETE) return VK_SUCCESS;
+   if (state == HELIOS_E1_WAIT_TIMEOUT) return VK_TIMEOUT;
+   return ctx.failure;
+}
+
 static VkResult
 helios_wait(struct vn_renderer *renderer, const struct vn_renderer_wait *wait)
 {
@@ -4561,66 +4803,8 @@ helios_wait(struct vn_renderer *renderer, const struct vn_renderer_wait *wait)
       const struct helios_sync *sync = (const struct helios_sync *)wait->syncs[i];
       e1_count += sync->backing == HELIOS_SYNC_BACKING_E1_V2;
    }
-   if (e1_count) {
-      uint32_t e1_complete = 0;
-      for (uint32_t i = 0; i < wait->sync_count; i++) {
-         const struct helios_sync *sync = (const struct helios_sync *)wait->syncs[i];
-         if (sync->backing != HELIOS_SYNC_BACKING_E1_V2)
-            continue;
-         struct helios_carrier_v2_snapshot snapshot;
-         if (!helios_carrier_read_snapshot(sync->carrier_view_readonly, &snapshot) ||
-             memcmp(snapshot.carrier_id, sync->carrier_id,
-                    sizeof(sync->carrier_id)) != 0)
-            HELIOS_P06_WAIT_RETURN(VK_ERROR_INVALID_EXTERNAL_HANDLE);
-         const enum helios_carrier_observation observed =
-            helios_carrier_observe(&snapshot, wait->sync_values[i]);
-         if (observed == HELIOS_CARRIER_ERROR)
-            HELIOS_P06_WAIT_RETURN(helios_wire_vk_result(
-               (struct helios_wire_result) {
-                  HELIOS_WIRE_ERROR, snapshot.terminal_response_type }));
-         e1_complete += observed == HELIOS_CARRIER_COMPLETE;
-      }
-      if (wait->wait_any && e1_complete)
-         HELIOS_P06_WAIT_RETURN(VK_SUCCESS);
-      if (!wait->wait_any && e1_complete != e1_count)
-         HELIOS_P06_WAIT_RETURN(wait->timeout == 0 ? VK_TIMEOUT : VK_ERROR_UNKNOWN);
-      if (e1_count == wait->sync_count)
-         HELIOS_P06_WAIT_RETURN(e1_complete ? VK_SUCCESS :
-                                (wait->timeout == 0 ? VK_TIMEOUT : VK_ERROR_UNKNOWN));
-
-      /* Retain the WDDM wait implementation for the remaining handles. E1
-       * pending with a blocking timeout has no wake primitive until GREEN-B;
-       * probe WDDM once and fail closed if none is already complete. */
-      const uint32_t count = wait->sync_count - e1_count;
-      struct vn_renderer_sync **legacy_syncs = calloc(count, sizeof(*legacy_syncs));
-      uint64_t *legacy_values = calloc(count, sizeof(*legacy_values));
-      if (!legacy_syncs || !legacy_values) {
-         free(legacy_syncs);
-         free(legacy_values);
-         HELIOS_P06_WAIT_RETURN(VK_ERROR_OUT_OF_HOST_MEMORY);
-      }
-      uint32_t index = 0;
-      for (uint32_t i = 0; i < wait->sync_count; i++) {
-         const struct helios_sync *sync = (const struct helios_sync *)wait->syncs[i];
-         if (sync->backing == HELIOS_SYNC_BACKING_E1_V2)
-            continue;
-         legacy_syncs[index] = wait->syncs[i];
-         legacy_values[index++] = wait->sync_values[i];
-      }
-      const struct vn_renderer_wait legacy_wait = {
-         .wait_any = wait->wait_any,
-         .timeout = e1_complete == 0 ? 0 : wait->timeout,
-         .syncs = legacy_syncs,
-         .sync_values = legacy_values,
-         .sync_count = count,
-      };
-      const VkResult legacy_result = helios_wait(renderer, &legacy_wait);
-      free(legacy_values);
-      free(legacy_syncs);
-      if (legacy_result == VK_TIMEOUT && !e1_complete && wait->timeout != 0)
-         HELIOS_P06_WAIT_RETURN(VK_ERROR_UNKNOWN);
-      HELIOS_P06_WAIT_RETURN(legacy_result);
-   }
+   if (e1_count)
+      HELIOS_P06_WAIT_RETURN(helios_e1_wait_blocking(helios, wait));
 
    if (helios->perf.enabled)
       helios->perf.wait_calls++;
