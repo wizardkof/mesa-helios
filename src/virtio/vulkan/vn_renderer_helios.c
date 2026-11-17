@@ -45,6 +45,7 @@
 #include <wchar.h> /* wcsstr — adapter description match in helios_open_d3dkmt */
 
 #include "vn_renderer_internal.h"
+#include "vn_renderer_helios_wait_result.h"
 #include "vn_device.h"
 #include "vn_device_memory.h"
 #include "vn_instance.h" /* helios_venus_instance_ctx_id (instance-scoped export) */
@@ -133,6 +134,7 @@ struct helios_unicode_string {
 #define HELIOS_FENCE_EVENT_PROBE_ACK        2u
 #define HELIOS_FENCE_EVENT_CANCELLED        3u
 #define HELIOS_FENCE_EVENT_NOT_FOUND        4u
+#define HELIOS_FENCE_EVENT_TERMINAL_ERROR   5u
 /* Local sentinel: the escape itself failed (never a wire value). */
 #define HELIOS_FENCE_EVENT_ESCAPE_FAILED    ~0u
 
@@ -291,8 +293,8 @@ struct helios_escape_wait_fence {
    struct helios_escape_header hdr;
    uint64_t fence_id;
    uint64_t timeout_ns;
-   uint32_t out_completed; /* out: 1 = complete, 0 = timed out */
-   uint32_t _pad;
+   uint32_t out_completed; /* out: 1 = success, 0 = timeout, 2 = error */
+   uint32_t out_response_type;
 };
 
 /* KMD 22.22.54+ usermode fence events (PSC WS2): REGISTER parks an event
@@ -309,7 +311,7 @@ struct helios_escape_fence_event {
    uint64_t fence_id;     /* in: wire fence id */
    uint64_t event_handle; /* in: usermode event HANDLE, zero-extended */
    uint32_t out_state;    /* out: HELIOS_FENCE_EVENT_* */
-   uint32_t _pad;
+   uint32_t out_response_type;
 };
 
 struct helios_escape_query_scanout {
@@ -415,6 +417,7 @@ struct helios_sync_pending {
    uint64_t val;
    uint64_t fence_id;
    bool complete;
+   uint32_t error_response_type;
 };
 
 struct helios_sync {
@@ -1310,9 +1313,9 @@ helios_vectored_exception_handler(PEXCEPTION_POINTERS ep)
 }
 
 static void helios_perf_write(struct helios *helios, bool final);
-static bool helios_ioctl_wait_fence(struct helios *helios,
-                                    uint64_t fence_id,
-                                    uint64_t timeout_ns);
+static struct helios_wire_result helios_ioctl_wait_fence(struct helios *helios,
+                                                         uint64_t fence_id,
+                                                         uint64_t timeout_ns);
 
 /* ── IOCTL helpers ─────────────────────────────────────────────────────────── */
 
@@ -2348,7 +2351,7 @@ helios_ioctl_map_blob(struct helios *helios,
  * PARKED inside this escape serializes the process's other escapes (submits)
  * at the dxgkrnl escape layer. This is therefore only the poll path + the
  * fallback for KMDs without fence events / refused registrations. */
-static bool
+static struct helios_wire_result
 helios_wait_fence_blocking(struct helios *helios, uint64_t fence_id, uint64_t timeout_ns)
 {
    struct helios_escape_wait_fence req = { 0 };
@@ -2357,8 +2360,11 @@ helios_wait_fence_blocking(struct helios *helios, uint64_t fence_id, uint64_t ti
    req.timeout_ns = timeout_ns;
    req.out_completed = 1;
    if (!helios_escape_ex(helios, &req, sizeof(req), false))
-      return false;
-   return req.out_completed != 0;
+      return (struct helios_wire_result) { HELIOS_WIRE_PENDING, 0 };
+   if (req.out_completed == 2)
+      return (struct helios_wire_result) { HELIOS_WIRE_ERROR, req.out_response_type };
+   return (struct helios_wire_result) {
+      req.out_completed == 1 ? HELIOS_WIRE_SUCCESS : HELIOS_WIRE_PENDING, 0 };
 }
 
 /* ── usermode fence-event waits (KMD 22.22.54+, PSC WS2) ──────────────────────
@@ -2418,7 +2424,8 @@ static uint32_t
 helios_escape_fence_event(struct helios *helios,
                           uint32_t cmd_type,
                           uint64_t fence_id,
-                          HANDLE event)
+                          HANDLE event,
+                          uint32_t *response_type)
 {
    struct helios_escape_fence_event req = { 0 };
    helios_hdr_init(&req.hdr, cmd_type, sizeof(req));
@@ -2427,6 +2434,8 @@ helios_escape_fence_event(struct helios *helios,
    req.out_state = HELIOS_FENCE_EVENT_ESCAPE_FAILED;
    if (!helios_escape_ex(helios, &req, sizeof(req), false))
       return HELIOS_FENCE_EVENT_ESCAPE_FAILED;
+   if (response_type)
+      *response_type = req.out_response_type;
    return req.out_state;
 }
 
@@ -2434,23 +2443,26 @@ helios_escape_fence_event(struct helios *helios,
  * is COMPLETE (the retirement raced our timeout). Distinguishes the three
  * legal shapes loudly; a lost registration (purged unsignaled at transport
  * teardown) reports INCOMPLETE — the caller's own deadline semantics apply. */
-static bool
+static struct helios_wire_result
 helios_fence_event_cancel(struct helios *helios, uint64_t fence_id, HANDLE ev)
 {
+   uint32_t response_type = 0;
    const uint32_t un = helios_escape_fence_event(
-      helios, HELIOS_ESCAPE_UNREGISTER_FENCE_EVENT, fence_id, ev);
+      helios, HELIOS_ESCAPE_UNREGISTER_FENCE_EVENT, fence_id, ev, &response_type);
+   if (un == HELIOS_FENCE_EVENT_TERMINAL_ERROR)
+      return (struct helios_wire_result) { HELIOS_WIRE_ERROR, response_type };
    if (un == HELIOS_FENCE_EVENT_CANCELLED)
-      return false; /* removed before signaling — a real timeout */
+      return (struct helios_wire_result) { HELIOS_WIRE_PENDING, 0 };
    if (un == HELIOS_FENCE_EVENT_NOT_FOUND) {
       if (WaitForSingleObject(ev, 0) == WAIT_OBJECT_0) {
          InterlockedIncrement(&helios_fence_event_raced);
-         return true; /* the drain consumed it: signal raced the timeout */
+         return (struct helios_wire_result) { HELIOS_WIRE_SUCCESS, 0 };
       }
       InterlockedIncrement(&helios_fence_event_lost);
       helios_diag("fence-event registration LOST for wire fence %llu "
                   "(not found + unsignaled — transport teardown?)",
                   (unsigned long long)fence_id);
-      return false;
+      return (struct helios_wire_result) { HELIOS_WIRE_PENDING, 0 };
    }
    /* The unregister escape failed. On a live transport this cannot happen
     * (the verb only takes the device lock); a dead transport never signals
@@ -2459,13 +2471,13 @@ helios_fence_event_cancel(struct helios *helios, uint64_t fence_id, HANDLE ev)
    InterlockedIncrement(&helios_fence_event_lost);
    helios_diag("fence-event UNREGISTER escape failed for wire fence %llu",
                (unsigned long long)fence_id);
-   return false;
+   return (struct helios_wire_result) { HELIOS_WIRE_PENDING, 0 };
 }
 
 /* Event-path fence wait: register → WaitForSingleObject → cancel on timeout.
  * Falls back to the blocking escape wait if the event machinery is refused
  * (table full, no event, escape failure) — correct either way, counted. */
-static bool
+static struct helios_wire_result
 helios_event_wait_fence(struct helios *helios, uint64_t fence_id, uint64_t timeout_ns)
 {
    HANDLE ev = helios_fence_event_get();
@@ -2474,11 +2486,14 @@ helios_event_wait_fence(struct helios *helios, uint64_t fence_id, uint64_t timeo
       return helios_wait_fence_blocking(helios, fence_id, timeout_ns);
    }
 
+   uint32_t response_type = 0;
    const uint32_t state = helios_escape_fence_event(
-      helios, HELIOS_ESCAPE_REGISTER_FENCE_EVENT, fence_id, ev);
+      helios, HELIOS_ESCAPE_REGISTER_FENCE_EVENT, fence_id, ev, &response_type);
+   if (state == HELIOS_FENCE_EVENT_TERMINAL_ERROR)
+      return (struct helios_wire_result) { HELIOS_WIRE_ERROR, response_type };
    if (state == HELIOS_FENCE_EVENT_ALREADY_COMPLETE) {
       InterlockedIncrement(&helios_fence_event_immediate);
-      return true;
+      return (struct helios_wire_result) { HELIOS_WIRE_SUCCESS, 0 };
    }
    if (state != HELIOS_FENCE_EVENT_REGISTERED) {
       /* Refused (table full / invalid / escape failure): blocking fallback. */
@@ -2491,18 +2506,19 @@ helios_event_wait_fence(struct helios *helios, uint64_t fence_id, uint64_t timeo
       timeout_ns < HELIOS_EVENT_WAIT_MAX_NS ? timeout_ns : HELIOS_EVENT_WAIT_MAX_NS;
    if (WaitForSingleObject(ev, helios_timeout_ns_to_ms(bounded_ns)) ==
        WAIT_OBJECT_0)
-      return true;
+      return helios_fence_event_cancel(helios, fence_id, ev);
 
-   if (helios_fence_event_cancel(helios, fence_id, ev))
-      return true;
+   struct helios_wire_result result = helios_fence_event_cancel(helios, fence_id, ev);
+   if (result.state != HELIOS_WIRE_PENDING)
+      return result;
    InterlockedIncrement(&helios_fence_event_timeouts);
-   return false;
+   return result;
 }
 
 /* Wire-fence wait dispatcher. Polls (timeout_ns == 0) stay on the escape —
  * they never park, so they cannot convoy — as does everything when the KMD
  * lacks fence events (probed once at init; loud diag there). */
-static bool
+static struct helios_wire_result
 helios_ioctl_wait_fence(struct helios *helios, uint64_t fence_id, uint64_t timeout_ns)
 {
    if (!helios->fence_events_supported || timeout_ns == 0)
@@ -2681,10 +2697,12 @@ enum helios_retire_wait {
    HELIOS_RETIRE_WAIT_TIMEOUT,  /* deadline expired — give up loudly */
    HELIOS_RETIRE_WAIT_STOPPED,  /* retire_stop_event — destroy join */
    HELIOS_RETIRE_WAIT_FALLBACK, /* event machinery refused — use slices */
+   HELIOS_RETIRE_WAIT_ERROR,
 };
 
 static enum helios_retire_wait
-helios_retire_event_wait(struct helios *helios, uint64_t fence_id)
+helios_retire_event_wait(struct helios *helios, uint64_t fence_id,
+                         uint32_t *response_type)
 {
    HANDLE ev = helios_fence_event_get();
    if (!ev || !helios->retire_stop_event || !ResetEvent(ev)) {
@@ -2693,7 +2711,9 @@ helios_retire_event_wait(struct helios *helios, uint64_t fence_id)
    }
 
    const uint32_t state = helios_escape_fence_event(
-      helios, HELIOS_ESCAPE_REGISTER_FENCE_EVENT, fence_id, ev);
+      helios, HELIOS_ESCAPE_REGISTER_FENCE_EVENT, fence_id, ev, response_type);
+   if (state == HELIOS_FENCE_EVENT_TERMINAL_ERROR)
+      return HELIOS_RETIRE_WAIT_ERROR;
    if (state == HELIOS_FENCE_EVENT_ALREADY_COMPLETE) {
       InterlockedIncrement(&helios_fence_event_immediate);
       return HELIOS_RETIRE_WAIT_COMPLETE;
@@ -2707,13 +2727,21 @@ helios_retire_event_wait(struct helios *helios, uint64_t fence_id)
    const HANDLE handles[2] = { ev, helios->retire_stop_event };
    const DWORD wr =
       WaitForMultipleObjects(2, handles, FALSE, HELIOS_RETIRE_DEADLINE_MS);
-   if (wr == WAIT_OBJECT_0)
-      return HELIOS_RETIRE_WAIT_COMPLETE;
+   if (wr == WAIT_OBJECT_0) {
+      const struct helios_wire_result result = helios_fence_event_cancel(helios, fence_id, ev);
+      *response_type = result.response_type;
+      return result.state == HELIOS_WIRE_ERROR ? HELIOS_RETIRE_WAIT_ERROR :
+             result.state == HELIOS_WIRE_SUCCESS ? HELIOS_RETIRE_WAIT_COMPLETE :
+             HELIOS_RETIRE_WAIT_TIMEOUT;
+   }
 
    /* Stop or deadline: cancel the registration either way (a completion that
     * raced in still reports COMPLETE so the sync is marked before exit). */
-   const bool complete = helios_fence_event_cancel(helios, fence_id, ev);
-   if (complete)
+   const struct helios_wire_result result = helios_fence_event_cancel(helios, fence_id, ev);
+   *response_type = result.response_type;
+   if (result.state == HELIOS_WIRE_ERROR)
+      return HELIOS_RETIRE_WAIT_ERROR;
+   if (result.state == HELIOS_WIRE_SUCCESS)
       return HELIOS_RETIRE_WAIT_COMPLETE;
    if (wr == WAIT_OBJECT_0 + 1)
       return HELIOS_RETIRE_WAIT_STOPPED;
@@ -2764,18 +2792,23 @@ helios_sync_retire_thread(void *arg)
       mtx_unlock(&helios->retire_mutex);
 
       bool complete = false;
+      uint32_t error_response_type = 0;
       /* Completion comes from the renderer's queue-marker fence through the
        * KMD used-ring path. No GPU-counter shadow or polling ladder bypasses
        * transport completion. Stop/deadline still leave the sync unsignaled. */
       if (!complete && !p_atomic_read(&helios->retire_stop)) {
          bool handled = false;
          if (helios->fence_events_supported) {
-            switch (helios_retire_event_wait(helios, entry->fence_id)) {
+            switch (helios_retire_event_wait(helios, entry->fence_id,
+                                             &error_response_type)) {
             case HELIOS_RETIRE_WAIT_COMPLETE:
                complete = true;
                handled = true;
                break;
             case HELIOS_RETIRE_WAIT_STOPPED:
+               handled = true;
+               break;
+            case HELIOS_RETIRE_WAIT_ERROR:
                handled = true;
                break;
             case HELIOS_RETIRE_WAIT_TIMEOUT:
@@ -2793,14 +2826,20 @@ helios_sync_retire_thread(void *arg)
          if (!handled) {
             uint32_t slices = 0;
             while (!p_atomic_read(&helios->retire_stop) && slices < HELIOS_RETIRE_MAX_SLICES) {
-               if (helios_wait_fence_blocking(helios, entry->fence_id,
-                                              HELIOS_RETIRE_SLICE_NS)) {
+               const struct helios_wire_result result =
+                  helios_wait_fence_blocking(helios, entry->fence_id,
+                                             HELIOS_RETIRE_SLICE_NS);
+               if (result.state == HELIOS_WIRE_ERROR) {
+                  error_response_type = result.response_type;
+                  break;
+               }
+               if (result.state == HELIOS_WIRE_SUCCESS) {
                   complete = true;
                   break;
                }
                slices++;
             }
-            if (!complete && !p_atomic_read(&helios->retire_stop)) {
+            if (!complete && !error_response_type && !p_atomic_read(&helios->retire_stop)) {
                helios_diag("retire-thread GIVING UP on wire fence %llu after %u "
                            "slices — shared sync stays UNSIGNALED (sem=%p)",
                            (unsigned long long)entry->fence_id,
@@ -2828,6 +2867,12 @@ helios_sync_retire_thread(void *arg)
                us < 1000 ? 0 : us < 3000 ? 1 : us < 6000 ? 2 :
                us < 10000 ? 3 : us < 20000 ? 4 : 5;
             helios->perf.retire_lat_hist[bucket]++;
+         }
+      }
+      if (error_response_type) {
+         for (uint32_t i = 0; i < entry->sync->pending_count; i++) {
+            if (entry->sync->pending[i].fence_id == entry->fence_id)
+               entry->sync->pending[i].error_response_type = error_response_type;
          }
       }
       free_sync = helios_sync_unref_locked(renderer, entry->sync);
@@ -4033,6 +4078,15 @@ helios_wait(struct vn_renderer *renderer, const struct vn_renderer_wait *wait)
    bool satisfied = !wait->wait_any; /* wait_all starts true, wait_any starts false */
    for (uint32_t i = 0; i < wait->sync_count; i++) {
       struct helios_sync *sync = (struct helios_sync *)wait->syncs[i];
+      for (uint32_t j = 0; j < sync->pending_count; j++) {
+         if (sync->pending[j].val <= wait->sync_values[i] &&
+             sync->pending[j].error_response_type) {
+            const uint32_t response_type = sync->pending[j].error_response_type;
+            mtx_unlock(&helios->dev_mutex);
+            return helios_wire_vk_result((struct helios_wire_result) {
+               HELIOS_WIRE_ERROR, response_type });
+         }
+      }
       if (sync->wddm_cpu_va) {
          const uint64_t wddm_val = *(const volatile uint64_t *)sync->wddm_cpu_va;
          if (sync->val < wddm_val)
@@ -4052,12 +4106,6 @@ helios_wait(struct vn_renderer *renderer, const struct vn_renderer_wait *wait)
          helios->perf.wait_fast++;
       return VK_SUCCESS;
    }
-   if (wait->timeout == 0) {
-      if (helios->perf.enabled)
-         helios->perf.wait_timeout++;
-      return VK_TIMEOUT;
-   }
-
    const uint32_t wait_fence_capacity =
       wait->sync_count * HELIOS_SYNC_PENDING_MAX;
    if (wait_fence_capacity > HELIOS_WAIT_FENCE_STACK_MAX) {
@@ -4137,8 +4185,21 @@ helios_wait(struct vn_renderer *renderer, const struct vn_renderer_wait *wait)
    }
 
    for (uint32_t i = 0; i < wait_fence_count; i++) {
-      if (!helios_ioctl_wait_fence(helios, wait_fences[i], wait->timeout)) {
-         result = VK_TIMEOUT;
+      const struct helios_wire_result wire =
+         helios_ioctl_wait_fence(helios, wait_fences[i], wait->timeout);
+      if (wire.state != HELIOS_WIRE_SUCCESS) {
+         result = helios_wire_vk_result(wire);
+         if (wire.state == HELIOS_WIRE_ERROR) {
+            mtx_lock(&helios->dev_mutex);
+            for (uint32_t s = 0; s < wait->sync_count; s++) {
+               struct helios_sync *sync = (struct helios_sync *)wait->syncs[s];
+               for (uint32_t p = 0; p < sync->pending_count; p++) {
+                  if (sync->pending[p].fence_id == wait_fences[i])
+                     sync->pending[p].error_response_type = wire.response_type;
+               }
+            }
+            mtx_unlock(&helios->dev_mutex);
+         }
          break;
       }
    }
@@ -4603,11 +4664,20 @@ helios_sync_read(struct vn_renderer *renderer,
    mtx_unlock(&helios->dev_mutex);
 
    for (uint32_t i = 0; i < fence_count; i++) {
-      if (helios_ioctl_wait_fence(helios, fences[i], 0)) {
+      const struct helios_wire_result wire = helios_ioctl_wait_fence(helios, fences[i], 0);
+      if (wire.state == HELIOS_WIRE_SUCCESS) {
          mtx_lock(&helios->dev_mutex);
          helios_sync_mark_fence_locked(renderer, sync, fences[i]);
          mtx_unlock(&helios->dev_mutex);
       } else {
+         if (wire.state == HELIOS_WIRE_ERROR) {
+            mtx_lock(&helios->dev_mutex);
+            for (uint32_t p = 0; p < sync->pending_count; p++) {
+               if (sync->pending[p].fence_id == fences[i])
+                  sync->pending[p].error_response_type = wire.response_type;
+            }
+            mtx_unlock(&helios->dev_mutex);
+         }
          break;
       }
    }

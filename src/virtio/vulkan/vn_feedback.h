@@ -45,6 +45,14 @@ struct vn_feedback_slot {
    uint32_t offset;
    VkBuffer buf_handle;
 
+   /* Immutable backing and memory metadata captured for this pool buffer.
+    * Recycled slots retain it until feedback-pool teardown. */
+   uint32_t virtio_res_id;
+   uint64_t memory_size;
+   uint32_t memory_type_bits;
+   uint32_t memory_type_index;
+   VkMemoryPropertyFlags memory_property_flags;
+
    union {
       void *data;
       VkResult *status;
@@ -70,15 +78,16 @@ struct vn_feedback_buffer {
    struct list_head head;
 };
 
-/* Feedback slots live in mappable Venus device memory the Helios backend maps
- * WC (prefer_cached_map is only set for the WSI blit destination), and WC/UC
- * guest mappings never hold CPU cache lines — the GPU's slot write reaches
- * host RAM coherently and a guest read goes straight to memory. The
- * clflush-per-poll these helpers used to issue on Windows was pure overhead
- * on the hottest path in the driver (every vkGetFenceStatus/vkWaitForFences
- * slot poll). Were a feedback slot ever mapped CACHED over a non-WB host
- * mapping, helios_bo_flush/invalidate (which keep the precise aliasing
- * check) would be the place to handle it, not per-access ops here. */
+/* Feedback slots live in mappable Venus device memory. For the observed
+ * HOST_VISIBLE|HOST_COHERENT memory without HOST_CACHED, prefer_cached_map is
+ * false and Mesa requests WC; the KMD honors that valid request when mapping
+ * the BAR. WC/UC guest mappings do not retain CPU cache lines, so the GPU's
+ * coherent slot write is read straight from memory. A coherent+cached memory
+ * type instead requests CACHED and uses helios_bo_flush/invalidate's aliasing
+ * checks. The clflush-per-poll these helpers used to issue on Windows was pure
+ * overhead on the hottest path (every vkGetFenceStatus/vkWaitForFences slot
+ * poll); cache maintenance belongs at the mapping-aware buffer helpers, not
+ * on every slot access. */
 static inline void
 vn_feedback_cpu_flush(const void *ptr, size_t size)
 {

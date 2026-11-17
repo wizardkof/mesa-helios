@@ -639,6 +639,13 @@ vn_physical_device_init_properties(struct vn_physical_device *physical_dev)
       VkPhysicalDeviceVertexAttributeDivisorProperties
          vertex_attribute_divisor;
 
+      /* AMD */
+      VkPhysicalDeviceShaderCorePropertiesAMD shader_core_properties_amd;
+      VkPhysicalDeviceShaderCoreProperties2AMD shader_core_properties2_amd;
+
+      /* NV */
+      VkPhysicalDeviceShaderSMBuiltinsPropertiesNV shader_sm_builtins;
+
       /* KHR */
       VkPhysicalDeviceAccelerationStructurePropertiesKHR
          acceleration_structure;
@@ -768,6 +775,13 @@ vn_physical_device_init_properties(struct vn_physical_device *physical_dev)
    VN_ADD_PNEXT_EXT(props2, TRANSFORM_FEEDBACK_PROPERTIES_EXT, local_props.transform_feedback, exts->EXT_transform_feedback);
    VN_ADD_PNEXT_EXT(props2, VERTEX_ATTRIBUTE_DIVISOR_PROPERTIES_EXT, local_props.vertex_attribute_divisor_ext, !exts->KHR_vertex_attribute_divisor && exts->EXT_vertex_attribute_divisor);
 
+   /* AMD */
+   VN_ADD_PNEXT_EXT(props2, SHADER_CORE_PROPERTIES_AMD, local_props.shader_core_properties_amd, exts->AMD_shader_core_properties);
+   VN_ADD_PNEXT_EXT(props2, SHADER_CORE_PROPERTIES_2_AMD, local_props.shader_core_properties2_amd, exts->AMD_shader_core_properties2);
+
+   /* NV */
+   VN_ADD_PNEXT_EXT(props2, SHADER_SM_BUILTINS_PROPERTIES_NV, local_props.shader_sm_builtins, exts->NV_shader_sm_builtins);
+
    /* clang-format on */
 
    vn_call_vkGetPhysicalDeviceProperties2(
@@ -857,6 +871,13 @@ vn_physical_device_init_properties(struct vn_physical_device *physical_dev)
    VN_SET_VK_PROPS_EXT(props, &local_props.sample_locations, exts->EXT_sample_locations);
    VN_SET_VK_PROPS_EXT(props, &local_props.transform_feedback, exts->EXT_transform_feedback);
    VN_SET_VK_PROPS_EXT(props, &local_props.vertex_attribute_divisor_ext, !exts->KHR_vertex_attribute_divisor && exts->EXT_vertex_attribute_divisor);
+
+   /* AMD */
+   VN_SET_VK_PROPS_EXT(props, &local_props.shader_core_properties_amd, exts->AMD_shader_core_properties);
+   VN_SET_VK_PROPS_EXT(props, &local_props.shader_core_properties2_amd, exts->AMD_shader_core_properties2);
+
+   /* NV */
+   VN_SET_VK_PROPS_EXT(props, &local_props.shader_sm_builtins, exts->NV_shader_sm_builtins);
 
    /* clang-format on */
 
@@ -1612,6 +1633,8 @@ vn_physical_device_get_passthrough_extensions(
       .EXT_vertex_input_dynamic_state = true,
 
       /* vendor */
+      .AMD_shader_core_properties = true,
+      .AMD_shader_core_properties2 = true,
       .ARM_rasterization_order_attachment_access = true,
       .GOOGLE_decorate_string = true,
       .GOOGLE_hlsl_functionality1 = true,
@@ -1619,6 +1642,7 @@ vn_physical_device_get_passthrough_extensions(
       .IMG_filter_cubic = true,
       .NV_compute_shader_derivatives = true,
       .NV_framebuffer_mixed_samples = true,
+      .NV_shader_sm_builtins = true,
       .VALVE_mutable_descriptor_type = true,
    };
 }

@@ -16,6 +16,7 @@
 #include "venus-protocol/vn_protocol_driver_semaphore.h"
 #include "venus-protocol/vn_protocol_driver_transport.h"
 
+#include "vn_buffer.h"
 #include "vn_command_buffer.h"
 #include "vn_device.h"
 #include "vn_feedback.h"
@@ -29,6 +30,7 @@
 #include "util/u_debug.h"
 
 #include <inttypes.h>
+#include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -41,6 +43,286 @@
 #if DETECT_OS_WINDOWS
 void vn_renderer_helios_diag_log(const char *fmt, ...);
 #endif
+
+/* HELIOS_QUEUE_IDLE_DIAGNOSTIC_BEGIN */
+/* Opt-in evidence only. The separate HOST_PROBE option may make one synchronous
+ * host query; its result never drives the fence decision. Default diagnostics
+ * only observe existing operations. A process budget bounds overlapping waits;
+ * exhaustion is not completion. TLS binds this call's fence, not object state.
+ */
+struct helios_idle_diag_sample {
+   bool iter_valid;
+   uint32_t iter;
+   bool result_valid;
+   VkResult result;
+   bool feedback_read;
+   VkResult feedback_result;
+   bool feedback_recheck_read;
+   VkResult feedback_recheck_result;
+   bool host_called;
+   bool host_result_valid;
+   VkResult host_result;
+   bool diagnostic_probe;
+   bool slot_valid;
+   uint64_t slot_buffer;
+   uint32_t slot_offset;
+   int slot_type;
+   uintptr_t slot_guest_va;
+   uint32_t slot_resource_id;
+   uint64_t slot_memory_size;
+   uint32_t slot_memory_type_bits;
+   uint32_t slot_memory_type_index;
+   VkMemoryPropertyFlags slot_memory_property_flags;
+   int64_t probe_duration_ns;
+   int64_t host_call_begin_ns;
+   int64_t host_call_end_ns;
+};
+
+struct helios_idle_diag {
+   struct helios_idle_diag *previous;
+   struct vn_queue *queue;
+   VkFence fence_handle;
+   bool enabled;
+   int64_t started_ns;
+   bool last_iter_valid;
+   uint32_t last_iter;
+   uint64_t host_total;
+   bool host_last_valid;
+   VkResult host_last_result;
+   bool probe_enabled;
+   bool probe_attempted;
+   uint64_t probe_host_total;
+   bool probe_host_last_valid;
+   VkResult probe_host_last_result;
+};
+
+static atomic_uint helios_idle_diag_lines;
+static _Thread_local struct helios_idle_diag *helios_idle_diag_active;
+
+static unsigned
+helios_idle_diag_take_lines(unsigned count)
+{
+   assert(count == 1 || count == 2);
+   unsigned used = atomic_load_explicit(&helios_idle_diag_lines,
+                                        memory_order_relaxed);
+   while (used <= 48 - count) {
+      if (atomic_compare_exchange_weak_explicit(&helios_idle_diag_lines, &used,
+                                                used + count, memory_order_relaxed,
+                                                memory_order_relaxed))
+         return used + 1;
+   }
+   return 0;
+}
+
+static unsigned
+helios_idle_diag_take_line(void)
+{
+   return helios_idle_diag_take_lines(1);
+}
+
+/* A reserved line remains usable even if another thread consumes the remaining
+ * budget while a synchronous probe is blocked. No second admission on END. */
+static void
+helios_idle_diag_emit_line(struct helios_idle_diag *diag, const char *event,
+                           struct helios_idle_diag_sample sample, unsigned line)
+{
+   assert(diag && diag->enabled && line && line <= 48);
+
+   struct vn_queue *queue = diag->queue;
+   struct vn_fence *fence = vn_fence_from_handle(diag->fence_handle);
+   const int64_t now_ns = os_time_get_nano();
+   const int64_t elapsed_ns = now_ns - diag->started_ns;
+#if DETECT_OS_WINDOWS
+#define HELIOS_IDLE_DIAG_LOG(...) vn_renderer_helios_diag_log(__VA_ARGS__)
+#else
+   struct vn_device *dev =
+      vn_device_from_handle(vk_device_to_handle(queue->base.vk.base.device));
+#define HELIOS_IDLE_DIAG_LOG(...) vn_log(dev->instance, __VA_ARGS__)
+#endif
+   HELIOS_IDLE_DIAG_LOG(
+      "HELIOS idle-fence line=%u event=%s tid=%" PRIu32 " queue=%" PRIu64
+      " family=%u index=%u ring=%u fence=%" PRIu64
+      " payload=%d can_feedback=%u feedback_enabled=%u pollable=%u"
+      " iter_valid=%u iter=%u mono_ns=%" PRId64 " elapsed_ns=%" PRId64
+      " result_valid=%u result=%d feedback_read=%u feedback_result=%d"
+      " feedback_recheck_read=%u feedback_recheck_result=%d"
+      " host_called=%u host_result_valid=%u host_result=%d"
+      " host_origin=%s host_total_scope=policy host_total=%" PRIu64
+      " host_last_valid=%u host_last_result=%d"
+      " probe_host_total=%" PRIu64
+      " probe_host_last_valid=%u probe_host_last_result=%d"
+      " slot_valid=%u slot_buffer=%" PRIu64 " slot_offset=%u slot_type=%d"
+      " slot_guest_va=0x%" PRIxPTR " slot_resource_id=%" PRIu32
+      " slot_memory_size=%" PRIu64 " slot_memory_type_bits=0x%08" PRIx32
+      " slot_memory_type_index=%" PRIu32
+      " slot_memory_property_flags=0x%08" PRIx32
+      " probe_duration_ns=%" PRId64
+      " host_call_begin_ns=%" PRId64 " host_call_end_ns=%" PRId64,
+      line, event, (uint32_t)vn_gettid(), (uint64_t)queue->base.id,
+      queue->base.vk.queue_family_index, queue->base.vk.index_in_family,
+      queue->ring_idx, fence ? (uint64_t)fence->base.id : 0,
+      fence && fence->payload ? (int)fence->payload->type : -1,
+      (unsigned)queue->can_feedback,
+      (unsigned)(fence && fence->feedback.slot),
+      (unsigned)(fence && fence->feedback.pollable),
+      (unsigned)sample.iter_valid, sample.iter, now_ns, elapsed_ns,
+      (unsigned)sample.result_valid, (int)sample.result,
+      (unsigned)sample.feedback_read, (int)sample.feedback_result,
+      (unsigned)sample.feedback_recheck_read,
+      (int)sample.feedback_recheck_result, (unsigned)sample.host_called,
+      (unsigned)sample.host_result_valid, (int)sample.host_result,
+      sample.diagnostic_probe ? "diagnostic_probe"
+      : sample.host_called    ? "policy"
+                              : "none",
+      diag->host_total, (unsigned)diag->host_last_valid,
+      (int)diag->host_last_result, diag->probe_host_total,
+      (unsigned)diag->probe_host_last_valid,
+      (int)diag->probe_host_last_result, (unsigned)sample.slot_valid,
+      sample.slot_buffer, sample.slot_offset, sample.slot_type,
+      sample.slot_guest_va, sample.slot_resource_id, sample.slot_memory_size,
+      sample.slot_memory_type_bits, sample.slot_memory_type_index,
+      (uint32_t)sample.slot_memory_property_flags, sample.probe_duration_ns,
+      sample.host_call_begin_ns, sample.host_call_end_ns);
+#undef HELIOS_IDLE_DIAG_LOG
+}
+
+static void
+helios_idle_diag_emit(struct helios_idle_diag *diag, const char *event,
+                      struct helios_idle_diag_sample sample)
+{
+   if (!diag || !diag->enabled)
+      return;
+   const unsigned line = helios_idle_diag_take_line();
+   if (line)
+      helios_idle_diag_emit_line(diag, event, sample, line);
+}
+
+static void
+helios_idle_diag_begin(struct helios_idle_diag *diag, struct vn_queue *queue)
+{
+   const char *option = os_get_option("HELIOS_QUEUE_IDLE_DIAG");
+   *diag = (struct helios_idle_diag){
+      .previous = helios_idle_diag_active,
+      .queue = queue,
+      .fence_handle = queue->wait_fence,
+      .enabled = option && option[0] == '1' && option[1] == '\0' &&
+                 atomic_load_explicit(&helios_idle_diag_lines,
+                                      memory_order_relaxed) < 48,
+   };
+   helios_idle_diag_active = diag->enabled ? diag : NULL;
+   if (diag->enabled) {
+      const char *probe = os_get_option("HELIOS_IDLE_FENCE_HOST_PROBE");
+      diag->probe_enabled = probe && probe[0] == '1' && probe[1] == '\0';
+      diag->started_ns = os_time_get_nano();
+      helios_idle_diag_emit(diag, "entry", (struct helios_idle_diag_sample){0});
+   }
+}
+
+static void
+helios_idle_diag_end(struct helios_idle_diag *diag, VkResult result)
+{
+   helios_idle_diag_emit(diag, "exit", (struct helios_idle_diag_sample){
+      .iter_valid = diag->last_iter_valid, .iter = diag->last_iter,
+      .result_valid = true, .result = result,
+   });
+   helios_idle_diag_active = diag->previous;
+}
+
+static void
+helios_idle_diag_host_begin(VkFence fence, struct vn_relax_state *relax)
+{
+   struct helios_idle_diag *diag = helios_idle_diag_active;
+   if (!diag || diag->fence_handle != fence)
+      return;
+   diag->host_total++;
+   helios_idle_diag_emit(diag, "host_begin", (struct helios_idle_diag_sample){
+      .iter_valid = relax != NULL,
+      .iter = relax ? relax->iter : 0, .host_called = true,
+   });
+}
+
+static void
+helios_idle_diag_poll(VkFence fence, struct helios_idle_diag_sample sample)
+{
+   struct helios_idle_diag *diag = helios_idle_diag_active;
+   if (!diag || diag->fence_handle != fence)
+      return;
+   diag->last_iter_valid = sample.iter_valid;
+   diag->last_iter = sample.iter;
+   if (sample.host_result_valid) {
+      diag->host_last_valid = true;
+      diag->host_last_result = sample.host_result;
+   }
+   /* Zero and powers of two expose the existing iteration cadence. Host
+    * returns and terminal results are useful even between these samples. */
+   if (sample.iter == 0 || !(sample.iter & (sample.iter - 1)) ||
+       sample.host_called || sample.result != VK_NOT_READY)
+      helios_idle_diag_emit(diag, "poll", sample);
+}
+/* Diagnostic only: querying the same native fence may block the primary ring
+ * and perturb timing. An external supervisor bounds the process, not this call.
+ * Keep the caller's local feedback result and normal warn path untouched. */
+static void
+helios_idle_diag_probe_host(VkDevice device, VkFence fence_handle,
+                            struct vn_relax_state *relax, VkResult feedback)
+{
+   struct helios_idle_diag *diag = helios_idle_diag_active;
+   if (!diag || !diag->enabled || !diag->probe_enabled || diag->probe_attempted ||
+       diag->fence_handle != fence_handle || feedback != VK_NOT_READY)
+      return;
+
+   struct vn_fence *fence = vn_fence_from_handle(fence_handle);
+   if (!fence->payload || fence->payload->type != VN_SYNC_TYPE_DEVICE_ONLY ||
+       !fence->feedback.pollable || !fence->feedback.slot)
+      return;
+   const int64_t started_ns = os_time_get_nano();
+   if (started_ns - diag->started_ns < INT64_C(1000000000))
+      return;
+   const unsigned first_line = helios_idle_diag_take_lines(2);
+   if (!first_line)
+      return;
+
+   diag->probe_attempted = true;
+   diag->probe_host_total++;
+   struct vn_feedback_slot *slot = fence->feedback.slot;
+   struct helios_idle_diag_sample sample = {
+      .iter_valid = relax != NULL,
+      .iter = relax ? relax->iter : 0,
+      .feedback_read = true,
+      .feedback_result = feedback,
+      .host_called = true,
+      .host_result_valid = false,
+      .diagnostic_probe = true,
+      .slot_valid = true,
+      .slot_buffer = vn_buffer_from_handle(slot->buf_handle)->base.id,
+      .slot_offset = slot->offset,
+      .slot_type = slot->type,
+      .slot_guest_va = (uintptr_t)slot->status,
+      /* Slot lifetime is already required for the existing status reads.
+       * The backing identity is immutable for its feedback-pool lifetime. */
+      .slot_resource_id = slot->virtio_res_id,
+      .slot_memory_size = slot->memory_size,
+      .slot_memory_type_bits = slot->memory_type_bits,
+      .slot_memory_type_index = slot->memory_type_index,
+      .slot_memory_property_flags = slot->memory_property_flags,
+   };
+   helios_idle_diag_emit_line(diag, "probe_begin", sample, first_line);
+
+   struct vn_device *dev = vn_device_from_handle(device);
+   sample.host_call_begin_ns = os_time_get_nano();
+   const VkResult host_result =
+      vn_call_vkGetFenceStatus(dev->primary_ring, device, fence_handle);
+   sample.host_call_end_ns = os_time_get_nano();
+   sample.probe_duration_ns = sample.host_call_end_ns - started_ns;
+   sample.host_result_valid = true;
+   sample.host_result = host_result;
+   sample.feedback_recheck_read = true;
+   sample.feedback_recheck_result = vn_feedback_get_status(slot);
+   diag->probe_host_last_valid = true;
+   diag->probe_host_last_result = host_result;
+   helios_idle_diag_emit_line(diag, "probe_end", sample, first_line + 1);
+}
+/* HELIOS_QUEUE_IDLE_DIAGNOSTIC_END */
 
 #if DETECT_OS_WINDOWS
 /* A present stream must remain an initially-zero, GPU-signaled timeline.
@@ -2579,6 +2861,8 @@ vn_QueueWaitIdle(VkQueue _queue)
    VkDevice dev_handle = vk_device_to_handle(queue->base.vk.base.device);
    struct vn_device *dev = vn_device_from_handle(dev_handle);
    VkResult result;
+   struct helios_idle_diag diag;
+   helios_idle_diag_begin(&diag, queue);
 
    vn_wsi_flush(queue);
 
@@ -2590,17 +2874,25 @@ vn_QueueWaitIdle(VkQueue _queue)
       };
       result =
          vn_CreateFence(dev_handle, &create_info, NULL, &queue->wait_fence);
-      if (result != VK_SUCCESS)
+      if (result != VK_SUCCESS) {
+         helios_idle_diag_end(&diag, result);
          return result;
+      }
    }
 
+   diag.fence_handle = queue->wait_fence;
    result = vn_queue_submit(&(struct vn_queue_submission){
       .batch_type = VK_STRUCTURE_TYPE_SUBMIT_INFO,
       .queue_handle = _queue,
       .fence_handle = queue->wait_fence,
    });
-   if (result != VK_SUCCESS)
+   helios_idle_diag_emit(&diag, "submit", (struct helios_idle_diag_sample){
+      .result_valid = true, .result = result,
+   });
+   if (result != VK_SUCCESS) {
+      helios_idle_diag_end(&diag, result);
       return result;
+   }
 
    result =
       vn_WaitForFences(dev_handle, 1, &queue->wait_fence, true, UINT64_MAX);
@@ -2608,6 +2900,7 @@ vn_QueueWaitIdle(VkQueue _queue)
    if (result == VK_SUCCESS)
       vn_device_memory_invalidate_coherent_cached_mappings(dev);
 
+   helios_idle_diag_end(&diag, result);
    return vn_result(dev->instance, result);
 }
 
@@ -2908,12 +3201,20 @@ vn_get_fence_status(VkDevice dev_handle,
    struct vn_sync_payload *payload = fence->payload;
 
    VkResult result;
+   struct helios_idle_diag_sample sample = {
+      .iter_valid = relax_state != NULL,
+      .iter = relax_state ? relax_state->iter : 0,
+      .result_valid = true,
+   };
    switch (payload->type) {
    case VN_SYNC_TYPE_DEVICE_ONLY:
       if (fence->feedback.pollable) {
          assert(fence->feedback.slot);
 
          result = vn_feedback_get_status(fence->feedback.slot);
+         sample.feedback_read = true;
+         sample.feedback_result = result;
+         helios_idle_diag_probe_host(dev_handle, fence_handle, relax_state, result);
          if (result == VK_SUCCESS) {
             /* When fence feedback slot gets signaled, the real fence
              * signal operation follows after but the signaling isr can be
@@ -2933,21 +3234,33 @@ vn_get_fence_status(VkDevice dev_handle,
              * to catch renderer device lost. Meanwhile, validate consistency
              * against ffb status if the fence is signaled.
              */
+            helios_idle_diag_host_begin(fence_handle, relax_state);
             result = vn_call_vkGetFenceStatus(dev->primary_ring, dev_handle,
                                               fence_handle);
+            sample.host_called = sample.host_result_valid = true;
+            sample.host_result = result;
             if (result == VK_ERROR_DEVICE_LOST) {
+               sample.result = result;
+               helios_idle_diag_poll(fence_handle, sample);
                vn_log(dev->instance, "aborting on ffb device lost");
                abort();
             }
-            if (result == VK_SUCCESS &&
-                vn_feedback_get_status(fence->feedback.slot) != VK_SUCCESS) {
-               vn_log(dev->instance, "ERROR: ffb must be signaled now");
-               result = VK_ERROR_UNKNOWN;
+            if (result == VK_SUCCESS) {
+               sample.feedback_recheck_read = true;
+               sample.feedback_recheck_result =
+                  vn_feedback_get_status(fence->feedback.slot);
+               if (sample.feedback_recheck_result != VK_SUCCESS) {
+                  vn_log(dev->instance, "ERROR: ffb must be signaled now");
+                  result = VK_ERROR_UNKNOWN;
+               }
             }
          }
       } else {
+         helios_idle_diag_host_begin(fence_handle, relax_state);
          result = vn_call_vkGetFenceStatus(dev->primary_ring, dev_handle,
                                            fence_handle);
+         sample.host_called = sample.host_result_valid = true;
+         sample.host_result = result;
       }
       break;
    case VN_SYNC_TYPE_IMPORTED_SYNC_FD:
@@ -2961,6 +3274,8 @@ vn_get_fence_status(VkDevice dev_handle,
       break;
    }
 
+   sample.result = result;
+   helios_idle_diag_poll(fence_handle, sample);
    return result;
 }
 
@@ -3693,6 +4008,9 @@ vn_get_semaphore_counter_value(VkDevice dev_handle,
        * updated to the suspended counter value which must be greater than the
        * feedback counter read from the feedback slot.
        */
+   retry_feedback:
+      deadline_hit = false;
+      check_device_lost = false;
       simple_mtx_lock(&sem->feedback.counter_mtx);
       uint64_t counter = vn_feedback_get_counter(sem->feedback.slot);
       if (sem->feedback.signaled_counter < counter) {
@@ -3783,8 +4101,22 @@ vn_get_semaphore_counter_value(VkDevice dev_handle,
              * had sig_age_ms <= 14 — all false positives; 4 of them during
              * login churn are what tripped the DEVICE_LOST latch). */
             simple_mtx_lock(&sem->feedback.cmd_mtx);
-            const bool signal_submitted =
-               !list_is_empty(&sem->feedback.pending_cmds);
+            /* A command can remain on pending_cmds after its value was
+             * reached: a renderer probe or CPU signal updates the cached
+             * counter without running the feedback-slot recycler above.
+             * List membership alone is not outstanding GPU work. */
+            bool signal_submitted = false;
+            list_for_each_entry(struct vn_semaphore_feedback_cmd, sfb_cmd,
+                                &sem->feedback.pending_cmds, head) {
+               if (vn_feedback_get_counter(sfb_cmd->src_slot) > counter) {
+                  signal_submitted = true;
+                  break;
+               }
+            }
+            if (!signal_submitted) {
+               sem->feedback.pending_signal_since_ns = 0;
+               sem->feedback.stale_strikes = 0;
+            }
             const int64_t pending_since =
                sem->feedback.pending_signal_since_ns;
             simple_mtx_unlock(&sem->feedback.cmd_mtx);
@@ -3831,9 +4163,13 @@ vn_get_semaphore_counter_value(VkDevice dev_handle,
              * windows — the Xid-109 zombie shows zero movement forever and
              * still latches at strikes x deadline. */
             simple_mtx_lock(&sem->feedback.counter_mtx);
-            const uint32_t strikes = ++sem->feedback.stale_strikes;
-            sem->feedback.stall_since_ns = os_time_get_nano();
-            sem->feedback.stall_counter = counter;
+            /* The synchronous renderer probe releases the feedback locks.
+             * Another thread (or the GPU slot) may have completed the work
+             * since the snapshot that triggered it. Recheck before latching
+             * a strike, without changing command-buffer recycling rules. */
+            const uint64_t current_counter =
+               MAX2(counter, MAX2(vn_feedback_get_counter(sem->feedback.slot),
+                                 sem->feedback.signaled_counter));
             /* Strike attribution (recorded at submission prepare): which
              * queue submitted the signal op this wait is starving on. */
             const uint64_t sig_queue_id = sem->feedback.last_signal_queue_id;
@@ -3863,7 +4199,7 @@ vn_get_semaphore_counter_value(VkDevice dev_handle,
                                 &sem->feedback.pending_cmds, head) {
                const uint64_t sfb_value =
                   vn_feedback_get_counter(sfb_cmd->src_slot);
-               if (sfb_value <= counter)
+               if (sfb_value <= current_counter)
                   continue;
                if (pending_signal_value && sfb_value >= pending_signal_value)
                   continue;
@@ -3875,11 +4211,42 @@ vn_get_semaphore_counter_value(VkDevice dev_handle,
                pending_ring_seqno_valid = sfb_cmd->ring_seqno_valid;
                pending_ring_seqno = sfb_cmd->ring_seqno;
             }
+            if (!pending_signal_value || current_counter > counter) {
+               sem->feedback.stale_strikes = 0;
+               sem->feedback.stall_since_ns = 0;
+               sem->feedback.pending_signal_since_ns =
+                  pending_signal_value ? os_time_get_nano() : 0;
+               simple_mtx_unlock(&sem->feedback.cmd_mtx);
+               simple_mtx_unlock(&sem->feedback.counter_mtx);
+               /* An advanced GPU slot must pass through the async renderer
+                * wait/recycler above before exposing its value to callers. */
+               if (current_counter > counter)
+                  goto retry_feedback;
+               goto feedback_done;
+            }
+            /* Several waiters can enter the unlocked renderer probe for the
+             * same expired window. Only the first returning probe may consume
+             * it; later probes must earn a fresh full window under both locks.
+             * Otherwise four concurrent waiters can latch loss in one window. */
+            const int64_t deadline_now = os_time_get_nano();
+            if (!sem->feedback.stall_since_ns ||
+                !sem->feedback.pending_signal_since_ns ||
+                deadline_now - sem->feedback.stall_since_ns <
+                   vn_helios_sem_deadline_ns() ||
+                deadline_now - sem->feedback.pending_signal_since_ns <
+                   vn_helios_sem_deadline_ns()) {
+               simple_mtx_unlock(&sem->feedback.cmd_mtx);
+               simple_mtx_unlock(&sem->feedback.counter_mtx);
+               goto feedback_done;
+            }
+            const uint32_t strikes = ++sem->feedback.stale_strikes;
+            sem->feedback.stall_since_ns = deadline_now;
+            sem->feedback.stall_counter = counter;
             const int64_t pending_ns =
                sem->feedback.pending_signal_since_ns
-                  ? os_time_get_nano() - sem->feedback.pending_signal_since_ns
+                  ? deadline_now - sem->feedback.pending_signal_since_ns
                   : -1;
-            sem->feedback.pending_signal_since_ns = os_time_get_nano();
+            sem->feedback.pending_signal_since_ns = deadline_now;
             simple_mtx_unlock(&sem->feedback.cmd_mtx);
             simple_mtx_unlock(&sem->feedback.counter_mtx);
             uint64_t wait_slot = 0;
@@ -3916,6 +4283,21 @@ vn_get_semaphore_counter_value(VkDevice dev_handle,
                       ? " — treating renderer context as lost"
                       : "");
 #if DETECT_OS_WINDOWS
+            if (debug_get_bool_option("HELIOS_SEMAPHORE_BACKING_TRACE", false)) {
+               /* The semaphore owns this slot during the call. Pool buffer
+                * identity is immutable, including across slot recycling. */
+               const struct vn_feedback_slot *slot = sem->feedback.slot;
+               vn_renderer_helios_diag_log(
+                  "HELIOS semaphore-backing sem=%llu buffer_id=%llu "
+                  "virtio_res_id=%u memory_size=%llu slot_offset=%u "
+                  "slot_type=%u slot_width=8 guest_counter=%llu "
+                  "renderer_counter=%llu",
+                  (unsigned long long)sem->base.id,
+                  (unsigned long long)vn_buffer_from_handle(slot->buf_handle)->base.id,
+                  slot->virtio_res_id, (unsigned long long)slot->memory_size,
+                  slot->offset, (unsigned)slot->type,
+                  (unsigned long long)counter, (unsigned long long)tmp);
+            }
             vn_renderer_helios_diag_log(
                "HELIOS sem-deadline strike %u/%u slot=%llu renderer=%llu "
                "sem=%llu reason=%s sig_queue=%llu family=%u ring=%u "
@@ -3966,6 +4348,7 @@ vn_get_semaphore_counter_value(VkDevice dev_handle,
          }
       }
 
+   feedback_done:
       *out_value = counter;
    } else {
       VkResult result = vn_call_vkGetSemaphoreCounterValue(

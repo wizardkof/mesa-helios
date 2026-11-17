@@ -5,11 +5,14 @@
 
 #include "vn_feedback.h"
 
+#include "vn_buffer.h"
 #include "vn_command_buffer.h"
 #include "vn_device.h"
+#include "vn_device_memory.h"
 #include "vn_physical_device.h"
 #include "vn_query_pool.h"
 #include "vn_queue.h"
+#include "vn_renderer.h"
 
 static uint32_t
 vn_get_memory_type_index(const VkPhysicalDeviceMemoryProperties *mem_props,
@@ -264,6 +267,17 @@ vn_feedback_pool_alloc(struct vn_feedback_pool *pool,
    slot->offset = offset;
    slot->buf_handle = fb_buf->buf_handle;
    slot->data = fb_buf->data + offset;
+   const struct vn_device_memory *mem =
+      vn_device_memory_from_handle(fb_buf->mem_handle);
+   slot->virtio_res_id = mem->base_bo ? mem->base_bo->res_id : 0;
+   slot->memory_size = mem->base.vk.size;
+   const struct vn_buffer *buf = vn_buffer_from_handle(fb_buf->buf_handle);
+   slot->memory_type_bits =
+      buf->requirements.memory.memoryRequirements.memoryTypeBits;
+   slot->memory_type_index = mem->base.vk.memory_type_index;
+   slot->memory_property_flags = pool->dev->physical_device->memory_properties
+                                    .memoryTypes[slot->memory_type_index]
+                                    .propertyFlags;
 
    return slot;
 }
